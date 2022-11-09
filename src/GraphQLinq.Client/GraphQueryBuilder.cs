@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace GraphQLinq
 {
@@ -79,12 +78,8 @@ namespace GraphQLinq
 
             var dictionary = new Dictionary<string, object> { { "query", graphQLQuery }, { "variables", queryVariables } };
 
-            var json = JsonSerializer.Serialize(dictionary, new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
-            });
+            // [MM] XK - Replace System.Text.Json by Newtonsoft.Json to make plugin compatible with Unity
+            var json = JsonConvert.SerializeObject(dictionary, GraphContext.CreateJsonSerializerSettings());
 
             return new GraphQLQuery(graphQLQuery, queryVariables, json);
         }

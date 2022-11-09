@@ -4,8 +4,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace GraphQLinq
 {
@@ -51,10 +52,23 @@ namespace GraphQLinq
             }
         }
 
-        public JsonSerializerOptions JsonSerializerOptions { get; set; } = new JsonSerializerOptions(JsonSerializerDefaults.Web)
+        public JsonSerializerSettings JsonSerializerOptions { get; set; } = CreateJsonSerializerSettings();
+
+        // [MM] XK - Replace System.Text.Json by Newtonsoft.Json to make plugin compatible with Unity
+        public static JsonSerializerSettings CreateJsonSerializerSettings()
         {
-            Converters = { new JsonStringEnumConverter() },
-        };
+            var contractResolver = new DefaultContractResolver
+            {
+                NamingStrategy = new CamelCaseNamingStrategy()
+            };
+
+            return new JsonSerializerSettings
+            {
+                ContractResolver = contractResolver,
+                Converters = { new StringEnumConverter() },
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+            };
+        }
 
         protected GraphCollectionQuery<T> BuildCollectionQuery<T>(object[] parameterValues, [CallerMemberName] string queryName = null)
         {
