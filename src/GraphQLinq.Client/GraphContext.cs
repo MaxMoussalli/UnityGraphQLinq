@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using UnityEngine.Networking;
 
 namespace GraphQLinq
 {
@@ -14,21 +14,22 @@ namespace GraphQLinq
     {
         private readonly bool ownsHttpClient = false;
 
-        public HttpClient HttpClient { get; }
+        // [MM] XK - Replace HttpClient by UnityWebRequest to make plugin compatible with Unity
+        public UnityWebRequest webRequest { get; }
 
-        protected GraphContext(HttpClient httpClient)
+        protected GraphContext(UnityWebRequest webRequest)
         {
-            if (httpClient == null)
+            if (webRequest == null)
             {
-                throw new ArgumentNullException($"{nameof(httpClient)} cannot be empty");
+                throw new ArgumentNullException($"{nameof(webRequest)} cannot be null");
             }
 
-            if (httpClient.BaseAddress == null)
+            if (webRequest.url == null)
             {
-                throw new ArgumentException($"{nameof(httpClient.BaseAddress)} cannot be empty");
+                throw new ArgumentException($"{nameof(webRequest.url)} cannot be empty");
             }
 
-            HttpClient = httpClient;
+            this.webRequest = webRequest;
         }
 
         protected GraphContext(string baseUrl, string authorization)
@@ -39,16 +40,12 @@ namespace GraphQLinq
             }
 
             ownsHttpClient = true;
-            HttpClient = new HttpClient();
-
-            if (!string.IsNullOrEmpty(baseUrl))
-            {
-                HttpClient.BaseAddress = new Uri(baseUrl);
-            }
+            webRequest = UnityWebRequest.Post(baseUrl, UnityWebRequest.kHttpVerbPOST);
+            webRequest.SetRequestHeader("Content-Type", "application/json");
 
             if (!string.IsNullOrEmpty(authorization))
             {
-                HttpClient.DefaultRequestHeaders.Add("Authorization", authorization);
+                webRequest.SetRequestHeader("Authorization", "Bearer " + authorization);
             }
         }
 
@@ -93,7 +90,7 @@ namespace GraphQLinq
         {
             if (ownsHttpClient)
             {
-                HttpClient.Dispose();
+                webRequest.Dispose();
             }
         }
     }
