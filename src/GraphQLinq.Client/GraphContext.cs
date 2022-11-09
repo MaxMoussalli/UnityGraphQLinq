@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -84,6 +86,21 @@ namespace GraphQLinq
             var parameters = GetType().GetMethod(queryName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance).GetParameters();
             var arguments = parameters.Zip(parameterValues, (info, value) => new { info.Name, Value = value }).ToDictionary(arg => arg.Name, arg => arg.Value);
             return arguments;
+        }
+
+        public async Task<string> PostAsync(string query)
+        {
+            byte[] postData = Encoding.ASCII.GetBytes(query);
+            webRequest.uploadHandler = new UploadHandlerRaw(postData);
+
+            webRequest.SendWebRequest();
+            while (!webRequest.isDone)
+                await Task.Yield(); // to keep in sync with unity thread
+
+            if (!string.IsNullOrEmpty(webRequest.error))
+                throw new UnityWebRequestException(webRequest.error, query);
+
+            return webRequest.downloadHandler.text;
         }
 
         public void Dispose()
