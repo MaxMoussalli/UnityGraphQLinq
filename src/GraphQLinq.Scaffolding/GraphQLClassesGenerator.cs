@@ -23,7 +23,7 @@ namespace GraphQLinq.Scaffolding
             { "Int", new("int", typeof(int)) },
             { "Float", new("float", typeof(float)) },
             { "String", new("string", typeof(string)) },
-            { "ID", new("string", typeof(string)) },
+            { "ID", new("ID", typeof(ID)) },
             { "Date", new("DateTime", typeof(DateTime)) },
             { "Boolean", new("bool", typeof(bool)) },
             { "Long", new("long", typeof(long)) },

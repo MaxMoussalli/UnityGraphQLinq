@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.cspr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServer", "GraphQLinq.TestServer\TestServer.csproj", "{24253353-E33C-48AD-97B7-F1958FEC3F59}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{79ABA765-2189-42B2-87A3-BECDC1E125A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{24253353-E33C-48AD-97B7-F1958FEC3F59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24253353-E33C-48AD-97B7-F1958FEC3F59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24253353-E33C-48AD-97B7-F1958FEC3F59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79ABA765-2189-42B2-87A3-BECDC1E125A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79ABA765-2189-42B2-87A3-BECDC1E125A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79ABA765-2189-42B2-87A3-BECDC1E125A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79ABA765-2189-42B2-87A3-BECDC1E125A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
