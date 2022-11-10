@@ -14,6 +14,7 @@ namespace GraphQLinq.Scaffolding
     class GraphQLClassesGenerator
     {
         List<string> usings = new() { "System", "System.Collections.Generic" };
+        List<string> usingsQueryContext = new() { "System", "System.Collections.Generic", "GraphQLinq", "UnityEngine.Networking" };
 
         private Dictionary<string, string> renamedClasses = new();
         private readonly CodeGenerationOptions options;
@@ -269,7 +270,7 @@ namespace GraphQLinq.Scaffolding
 
         private SyntaxNode GenerateGraphContext(GraphqlType queryInfo, string endpointUrl)
         {
-            var topLevelDeclaration = RoslynUtilities.GetTopLevelNode(options.Namespace).AddUsings(UsingDirective(IdentifierName("GraphQLinq")));
+            var topLevelDeclaration = RoslynUtilities.GetTopLevelNode(options.Namespace);
 
             var className = $"{options.ContextName}Context";
             var declaration = ClassDeclaration(className)
@@ -295,11 +296,11 @@ namespace GraphQLinq.Scaffolding
                                     .WithBody(Block());
 
             var baseHttpClientInitializer = ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                    .AddArgumentListArguments(Argument(IdentifierName("httpClient")));
+                                    .AddArgumentListArguments(Argument(IdentifierName("webRequest")));
 
             var httpClientConstructorDeclaration = ConstructorDeclaration(className)
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                    .AddParameterListParameters(Parameter(Identifier("httpClient")).WithType(ParseTypeName("HttpClient")))
+                                    .AddParameterListParameters(Parameter(Identifier("webRequest")).WithType(ParseTypeName("UnityWebRequest")))
                                     .WithInitializer(baseHttpClientInitializer)
                                     .WithBody(Block());
 
@@ -359,11 +360,10 @@ namespace GraphQLinq.Scaffolding
                 declaration = declaration.AddMembers(methodDeclaration);
             }
 
-            foreach (var @using in usings)
+            foreach (var @using in usingsQueryContext)
             {
                 topLevelDeclaration = topLevelDeclaration.AddUsings(UsingDirective(IdentifierName(@using)));
             }
-            topLevelDeclaration = topLevelDeclaration.AddUsings(UsingDirective(IdentifierName("System.Net.Http")));
 
             topLevelDeclaration = topLevelDeclaration.AddMembers(declaration);
 
