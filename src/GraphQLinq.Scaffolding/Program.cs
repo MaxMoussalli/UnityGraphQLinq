@@ -4,6 +4,7 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Spectre.Console;
@@ -139,7 +140,17 @@ namespace GraphQLinq.Scaffolding
             {
                 AnsiConsole.WriteLine("Running introspection query ...");
                 using var httpClient = new HttpClient();
-                using var responseMessage = await httpClient.PostAsJsonAsync(endpoint, new { query = IntrospectionQuery });
+
+                // [MM] XK - Replace httpClient.PostAsJsonAsync by httpClient.SendAsync to fix issues with GraphQl deployed on Playfab
+                // https://stackoverflow.com/questions/70344134/http-post-to-net-isolated-azure-function-body-empty-most-of-the-time
+                var request = new HttpRequestMessage()
+                {
+                    Method = HttpMethod.Post,
+                    RequestUri = endpoint
+                };
+                string jsonQuery = JsonSerializer.Serialize(new { query = IntrospectionQuery });
+                request.Content = new StringContent(jsonQuery, Encoding.UTF8, "application/json");
+                using var responseMessage = await httpClient.SendAsync(request);
 
                 AnsiConsole.WriteLine("Reading and deserializing schema information ...");
                 var schemaJson = await responseMessage.Content.ReadAsStringAsync();
