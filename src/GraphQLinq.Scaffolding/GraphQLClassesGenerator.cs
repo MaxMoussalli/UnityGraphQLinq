@@ -13,7 +13,7 @@ namespace GraphQLinq.Scaffolding
 {
     class GraphQLClassesGenerator
     {
-        List<string> usings = new() { "System", "System.Collections.Generic" };
+        List<string> usings = new() { "System", "System.Collections.Generic", "GraphQLinq" };
         List<string> usingsQueryContext = new() { "System", "System.Collections.Generic", "GraphQLinq", "UnityEngine.Networking" };
 
         private Dictionary<string, string> renamedClasses = new();
