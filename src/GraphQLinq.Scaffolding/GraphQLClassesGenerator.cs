@@ -279,7 +279,8 @@ namespace GraphQLinq.Scaffolding
                 .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword))
                 .AddBaseListTypes(SimpleBaseType(ParseTypeName("GraphContext")));
 
-            declaration = AddQueryFieldProp(queryInfo, declaration);
+            // [MM] XK - generate a prop to store the json of args for all queries (to handle non-nullable types)
+            declaration = AddQueriesArgsJsonProp(queryInfo, declaration);
 
             var thisInitializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer)
                                     .AddArgumentListArguments(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(endpointUrl))));
@@ -374,13 +375,20 @@ namespace GraphQLinq.Scaffolding
             return topLevelDeclaration;
         }
 
-        private ClassDeclarationSyntax AddQueryFieldProp(GraphqlType queryInfo, ClassDeclarationSyntax declaration)
+        /// <summary>
+        /// [MM] XK - this method will write in the class a property set with a json string that containt the args type of all queries
+        /// this take into account the non-nullable types
+        /// </summary>
+        /// <param name="queryInfo"></param>
+        /// <param name="declaration"></param>
+        /// <returns></returns>
+        private ClassDeclarationSyntax AddQueriesArgsJsonProp(GraphqlType queryInfo, ClassDeclarationSyntax declaration)
         {
             var json = GenerateQueryArgsJson(queryInfo);
 
             declaration = declaration.WithMembers(
                     SingletonList<MemberDeclarationSyntax>(
-                    PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier("QueryFieldsJson"))
+                    PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier("QueriesArgsJson"))
                     .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.OverrideKeyword)))
                     .WithAccessorList(
                         AccessorList(
@@ -394,6 +402,11 @@ namespace GraphQLinq.Scaffolding
             return declaration;
         }
 
+        /// <summary>
+        /// [MM] XK - serialise in json the args types of all queries
+        /// </summary>
+        /// <param name="queryInfo"></param>
+        /// <returns></returns>
         private string GenerateQueryArgsJson(GraphqlType queryInfo)
         {
             var queriesArgs = new QueriesArgs();
@@ -412,6 +425,11 @@ namespace GraphQLinq.Scaffolding
             return JsonSerializer.Serialize(queriesArgs);
         }
 
+        /// <summary>
+        /// [MM] XK - wrote the GraphQL type and take into account the non-nullable types
+        /// </summary>
+        /// <param name="field"></param>
+        /// <returns></returns>
         private string GetTypeFromFieldType(FieldType field)
         {
             if (field.OfType == null)

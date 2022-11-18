@@ -20,8 +20,8 @@ namespace GraphQLinq
         // [MM] XK - Replace HttpClient by UnityWebRequest to make plugin compatible with Unity
         public UnityWebRequest webRequest { get; }
 
-        // [MM] XK - Add Fields json schema to find non-null
-        protected abstract string QueryFieldsJson { get; }
+        // [MM] XK - Add json query args schema to handle non-nullables
+        protected abstract string QueriesArgsJson { get; }
         private QueriesArgs m_QueriesArgs;
 
         protected GraphContext(UnityWebRequest webRequest)
