@@ -72,7 +72,8 @@ namespace GraphQLinq
             selectClause = Environment.NewLine + selectClause + Environment.NewLine;
 
             var queryParameters = passedArguments.Any() ? $"({string.Join(", ", passedArguments.Select(pair => $"{pair.Key}: ${pair.Key}"))})" : "";
-            var queryParameterTypes = queryVariables.Any() ? $"({string.Join(", ", queryVariables.Select(pair => $"${pair.Key}: {pair.Value.GetType().ToGraphQlType()}"))})" : "";
+            var args = queryVariables.Select(pair => "$" + pair.Key + ": " + graphQuery.Context.GetArgsDefinition(graphQuery.QueryName, pair.Key));
+            var queryParameterTypes = queryVariables.Any() ? $"({string.Join(", ", args)})" : "";
 
             var graphQLQuery = string.Format(isScalarQuery ? ScalarQueryTemplate : QueryTemplate, queryParameterTypes, ResultAlias, graphQuery.QueryName, queryParameters, selectClause);
 

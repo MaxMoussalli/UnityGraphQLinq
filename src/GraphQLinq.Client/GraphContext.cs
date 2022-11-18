@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using GraphQLinq.Shared.Scaffolding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -12,12 +13,16 @@ using UnityEngine.Networking;
 
 namespace GraphQLinq
 {
-    public class GraphContext : IDisposable
+    public abstract class GraphContext : IDisposable
     {
         private readonly bool ownsHttpClient = false;
 
         // [MM] XK - Replace HttpClient by UnityWebRequest to make plugin compatible with Unity
         public UnityWebRequest webRequest { get; }
+
+        // [MM] XK - Add Fields json schema to find non-null
+        protected abstract string QueryFieldsJson { get; }
+        private QueriesArgs m_QueriesArgs;
 
         protected GraphContext(UnityWebRequest webRequest)
         {
@@ -32,6 +37,8 @@ namespace GraphQLinq
             }
 
             this.webRequest = webRequest;
+
+            InitQueriesArgs();
         }
 
         protected GraphContext(string baseUrl, string authorization)
@@ -49,6 +56,8 @@ namespace GraphQLinq
             {
                 webRequest.SetRequestHeader("Authorization", "Bearer " + authorization);
             }
+
+            InitQueriesArgs();
         }
 
         public JsonSerializerSettings JsonSerializerOptions { get; set; } = CreateJsonSerializerSettings();
@@ -71,25 +80,34 @@ namespace GraphQLinq
 
         protected GraphCollectionQuery<T> BuildCollectionQuery<T>(object[] parameterValues, [CallerMemberName] string queryName = null)
         {
-            var arguments = BuildDictionary(parameterValues, queryName);
+            var arguments = BuildArgumentDictionnary(parameterValues, queryName);
             return new GraphCollectionQuery<T, T>(this, queryName) { Arguments = arguments };
         }
 
         protected GraphItemQuery<T> BuildItemQuery<T>(object[] parameterValues, [CallerMemberName] string queryName = null)
         {
-            var arguments = BuildDictionary(parameterValues, queryName);
+            var arguments = BuildArgumentDictionnary(parameterValues, queryName);
             return new GraphItemQuery<T, T>(this, queryName) { Arguments = arguments };
         }
 
-        private Dictionary<string, object> BuildDictionary(object[] parameterValues, string queryName)
+        private Dictionary<string, object> BuildArgumentDictionnary(object[] parameterValues, string queryName)
         {
             var parameters = GetType().GetMethod(queryName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance).GetParameters();
-            var arguments = parameters.Zip(parameterValues, (info, value) => new { info.Name, Value = value }).ToDictionary(arg => arg.Name, arg => arg.Value);
+            var arguments = parameters.Zip(parameterValues, (info, value) =>
+            new
+            {
+                Name = info.Name,
+                Value = value,
+            })
+            .ToDictionary(arg => arg.Name, arg => arg.Value);
+
             return arguments;
         }
 
         public async Task<string> PostAsync(string query)
         {
+            Console.WriteLine("query: " + query);
+
             byte[] postData = Encoding.ASCII.GetBytes(query);
             webRequest.uploadHandler = new UploadHandlerRaw(postData);
 
@@ -109,6 +127,24 @@ namespace GraphQLinq
             {
                 webRequest.Dispose();
             }
+        }
+
+        private void InitQueriesArgs()
+        {
+            m_QueriesArgs = JsonConvert.DeserializeObject<QueriesArgs>(QueryFieldsJson);
+        }
+
+        public string GetArgsDefinition(string queryName, string argName)
+        {
+            m_QueriesArgs.TryGetValue(queryName, out var args);
+            if (args == null)
+                return "";
+
+            args.TryGetValue(argName, out var value);
+            if (value == null)
+                return "";
+
+            return value;
         }
     }
 }

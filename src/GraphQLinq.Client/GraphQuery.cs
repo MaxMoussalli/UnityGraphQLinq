@@ -17,6 +17,7 @@ namespace GraphQLinq
         internal LambdaExpression Selector { get; private set; }
         internal List<IncludeDetails> Includes { get; private set; } = new List<IncludeDetails>();
         internal Dictionary<string, object> Arguments { get; set; } = new Dictionary<string, object>();
+        internal GraphContext Context => context;
 
         internal GraphQuery(GraphContext graphContext, string queryName)
         {

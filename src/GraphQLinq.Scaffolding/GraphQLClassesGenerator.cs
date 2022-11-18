@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using GraphQLinq.Shared.Scaffolding;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -277,6 +279,8 @@ namespace GraphQLinq.Scaffolding
                 .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword))
                 .AddBaseListTypes(SimpleBaseType(ParseTypeName("GraphContext")));
 
+            declaration = AddQueryFieldProp(queryInfo, declaration);
+
             var thisInitializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer)
                                     .AddArgumentListArguments(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(endpointUrl))));
 
@@ -331,7 +335,7 @@ namespace GraphQLinq.Scaffolding
                 {
                     (fieldTypeName, fieldType) = GetSharpTypeName(arg.Type);
 
-                    if (NeedsNullable(fieldType, arg.Type))
+                    if (NeedsNullable(fieldType, arg.Type) && arg.Type.Kind != TypeKind.NonNull)
                     {
                         fieldTypeName += "?";
                     }
@@ -368,6 +372,73 @@ namespace GraphQLinq.Scaffolding
             topLevelDeclaration = topLevelDeclaration.AddMembers(declaration);
 
             return topLevelDeclaration;
+        }
+
+        private ClassDeclarationSyntax AddQueryFieldProp(GraphqlType queryInfo, ClassDeclarationSyntax declaration)
+        {
+            var json = GenerateQueryArgsJson(queryInfo);
+
+            declaration = declaration.WithMembers(
+                    SingletonList<MemberDeclarationSyntax>(
+                    PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier("QueryFieldsJson"))
+                    .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.OverrideKeyword)))
+                    .WithAccessorList(
+                        AccessorList(
+                            List<AccessorDeclarationSyntax>(
+                                new AccessorDeclarationSyntax[]{
+                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))})))
+                    .WithInitializer(EqualsValueClause(
+                        LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(json))))
+                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))));
+            return declaration;
+        }
+
+        private string GenerateQueryArgsJson(GraphqlType queryInfo)
+        {
+            var queriesArgs = new QueriesArgs();
+
+            foreach (var query in queryInfo.Fields)
+            {
+                var queryArgs = new QueryArgs();
+                foreach (var arg in query.Args)
+                {
+                    var typeStr = GetTypeFromFieldType(arg.Type);
+                    queryArgs.Add(arg.Name, typeStr);
+                }
+                queriesArgs.Add(query.Name, queryArgs);
+            }
+
+            return JsonSerializer.Serialize(queriesArgs);
+        }
+
+        private string GetTypeFromFieldType(FieldType field)
+        {
+            if (field.OfType == null)
+                return field.Name ?? "";
+
+            var strFormat = "";
+            switch (field.Kind)
+            {
+                case TypeKind.List:
+                    strFormat = "[{0}]";
+                    break;
+                case TypeKind.NonNull:
+                    strFormat = "{0}!";
+                    break;
+                case TypeKind.Scalar:
+                case TypeKind.Object:
+                case TypeKind.Interface:
+                case TypeKind.Union:
+                case TypeKind.Enum:
+                case TypeKind.InputObject:
+                default:
+                    strFormat = "{0}";
+                    break;
+            }
+
+            var subType = GetTypeFromFieldType(field.OfType);
+            return string.Format(strFormat, subType);
         }
 
         private static bool NeedsNullable(Type? systemType, FieldType type)
@@ -417,9 +488,6 @@ namespace GraphQLinq.Scaffolding
                             typeName = wrapWithGraphTypes ? $"GraphCollectionQuery<{type}>" : $"List<{type}>";
                             return (typeName, null);
                         }
-                    case TypeKind.NonNull when fieldType.OfType?.Name?.ToUpper() == "ID":
-                        (typeName, resultType) = GetMappedType("string");
-                        break;
                     default:
                         return GetSharpTypeName(fieldType.OfType);
                 }

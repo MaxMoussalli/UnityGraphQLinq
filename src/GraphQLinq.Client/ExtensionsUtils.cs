@@ -68,7 +68,7 @@ namespace GraphQLinq
 
             if (type == typeof(string))
             {
-                return "String!";
+                return "String";
             }
 
             if (type == typeof(float))
