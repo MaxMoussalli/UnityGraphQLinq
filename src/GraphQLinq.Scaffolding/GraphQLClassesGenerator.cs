@@ -180,7 +180,7 @@ namespace GraphQLinq.Scaffolding
 
             var name = interfaceInfo.Name.NormalizeIfNeeded(options);
 
-            var declaration = InterfaceDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword));
+            var declaration = InterfaceDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword));
 
             foreach (var field in interfaceInfo.Fields)
             {
