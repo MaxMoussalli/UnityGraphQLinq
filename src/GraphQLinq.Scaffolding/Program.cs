@@ -116,7 +116,7 @@ namespace GraphQLinq.Scaffolding
                 new Argument<Uri>("endpoint", "Endpoint of the GraphQL service"),
                 new Option<string>(new []{ "--output", "-o" }, () => "", "Output folder"),
                 new Option<string>(new []{ "--namespace", "-n" }, () => "","Namespace of generated classes"),
-                new Option<string>(new []{ "--context", "-c" }, () => "Query","Name of the generated context classes"),
+                new Option<string>(new []{ "--context", "-c" }, () => "","Name of the generated context classes"),
             };
 
             generate.Handler = CommandHandler.Create<Uri, string, string, string, IConsole>(HandleGenerate);

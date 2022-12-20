@@ -92,11 +92,15 @@ namespace GraphQLinq.Scaffolding
             var queryExtensions = GenerateQueryExtensions(classesWithArgFields);
             FormatAndWriteToFile(queryExtensions, "QueryExtensions");
 
-            var queryClass = schema.Types.Single(type => type.Name == queryType);
-
             AnsiConsole.WriteLine("Scaffolding GraphQLContext ...");
+            // Generate Queries into QueryContext
+            var queryClass = schema.Types.Single(type => type.Name == queryType);
             var graphContext = GenerateGraphContext(queryClass, endpointUrl);
-            FormatAndWriteToFile(graphContext, $"{options.ContextName}Context");
+            FormatAndWriteToFile(graphContext, $"{options.ContextName}{queryClass.Name}Context");
+            // Generate Mutations into MutationContext
+            var mutationClass = schema.Types.Single(type => type.Name == mutationType);
+            var mutationContext = GenerateGraphContext(mutationClass, endpointUrl);
+            FormatAndWriteToFile(mutationContext, $"{options.ContextName}{mutationClass.Name}Context");
 
             return $"{options.ContextName}Context";
         }
@@ -274,7 +278,7 @@ namespace GraphQLinq.Scaffolding
         {
             var topLevelDeclaration = RoslynUtilities.GetTopLevelNode(options.Namespace);
 
-            var className = $"{options.ContextName}Context";
+            var className = $"{options.ContextName}{queryInfo.Name}Context";
             var declaration = ClassDeclaration(className)
                 .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword))
                 .AddBaseListTypes(SimpleBaseType(ParseTypeName("GraphContext")));
