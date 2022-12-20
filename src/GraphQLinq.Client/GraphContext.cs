@@ -131,7 +131,7 @@ namespace GraphQLinq
 
         private void InitQueriesArgs()
         {
-            m_QueriesArgs = JsonConvert.DeserializeObject<QueriesArgs>(QueryFieldsJson);
+            m_QueriesArgs = JsonConvert.DeserializeObject<QueriesArgs>(QueriesArgsJson);
         }
 
         public string GetArgsDefinition(string queryName, string argName)
