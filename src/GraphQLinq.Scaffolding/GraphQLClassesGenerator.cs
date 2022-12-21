@@ -113,6 +113,11 @@ namespace GraphQLinq.Scaffolding
 
             var declaration = EnumDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword));
 
+            // Add enum comments
+            var doc = CreateTriviaComment(enumInfo.Description);
+            if (doc != null)
+                declaration = declaration.WithLeadingTrivia(doc);
+
             foreach (var enumValue in enumInfo.EnumValues)
             {
                 declaration = declaration.AddMembers(EnumMemberDeclaration(Identifier(EscapeIdentifierName(enumValue.Name))));
@@ -131,6 +136,11 @@ namespace GraphQLinq.Scaffolding
 
             var declaration = ClassDeclaration(className)
                                 .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword));
+
+            // Add class comments
+            var doc = CreateTriviaComment(classInfo.Description);
+            if (doc != null)
+                declaration = declaration.WithLeadingTrivia(doc);
 
             foreach (var @interface in classInfo.Interfaces ?? new List<GraphqlType>())
             {
@@ -157,6 +167,11 @@ namespace GraphQLinq.Scaffolding
                 var property = PropertyDeclaration(ParseTypeName(fieldTypeName), fieldName)
                                             .AddModifiers(Token(SyntaxKind.PublicKeyword));
 
+                // Add field comments
+                doc = CreateTriviaComment(field.Description);
+                if (doc != null)
+                    property = property.WithLeadingTrivia(doc);
+
                 property = property.AddAccessorListAccessors(AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                    .WithSemicolonToken(semicolonToken));
 
@@ -176,6 +191,28 @@ namespace GraphQLinq.Scaffolding
             return topLevelDeclaration;
         }
 
+        private static SyntaxTriviaList? CreateTriviaComment(string description)
+        {
+            if (string.IsNullOrEmpty(description))
+                return null;
+
+            // replace string line break by xml line break
+            var tokens = description.Split('\n')
+                            .Select(line => XmlTextLiteral(line))
+                            .ToList();
+            for (int i = 1; i < tokens.Count; i += 2)
+                tokens.Insert(i, XmlTextNewLine("\n"));
+
+            // add new line between summmary tags
+            tokens.Insert(0, XmlTextNewLine("\n"));
+            tokens.Add(XmlTextNewLine("\n"));
+
+            // Create comment
+            var summary = XmlElement("summary", SingletonList<XmlNodeSyntax>(XmlText(TokenList(tokens))));
+            SyntaxTriviaList doc = TriviaList(Trivia(DocumentationComment(summary, XmlText("\n"))));
+            return doc;
+        }
+
         private SyntaxNode GenerateInterface(GraphqlType interfaceInfo)
         {
             var topLevelDeclaration = RoslynUtilities.GetTopLevelNode(options.Namespace);
@@ -185,6 +222,11 @@ namespace GraphQLinq.Scaffolding
             var name = interfaceInfo.Name.NormalizeIfNeeded(options);
 
             var declaration = InterfaceDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword));
+
+            // Add interface comments
+            var doc = CreateTriviaComment(interfaceInfo.Description);
+            if (doc != null)
+                declaration = declaration.WithLeadingTrivia(doc);
 
             foreach (var field in interfaceInfo.Fields)
             {
@@ -198,6 +240,11 @@ namespace GraphQLinq.Scaffolding
                 var fieldName = field.Name.NormalizeIfNeeded(options);
 
                 var property = PropertyDeclaration(ParseTypeName(fieldTypeName), fieldName);
+
+                // Add field comments
+                doc = CreateTriviaComment(field.Description);
+                if (doc != null)
+                    property = property.WithLeadingTrivia(doc);
 
                 property = property.AddAccessorListAccessors(AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                    .WithSemicolonToken(semicolonToken));
@@ -331,6 +378,11 @@ namespace GraphQLinq.Scaffolding
 
                 var methodDeclaration = MethodDeclaration(ParseTypeName(fieldTypeName), fieldName)
                                             .AddModifiers(Token(SyntaxKind.PublicKeyword));
+
+                // Add method comments
+                var doc = CreateTriviaComment(field.Description);
+                if (doc != null)
+                    methodDeclaration = methodDeclaration.WithLeadingTrivia(doc);
 
                 var methodParameters = new List<ParameterSyntax>();
 
