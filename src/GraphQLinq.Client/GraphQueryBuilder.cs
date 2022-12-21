@@ -91,7 +91,10 @@ namespace GraphQLinq
             {
                 var member = memberExpression.Member as PropertyInfo;
 
-                if (member != null)
+                // ignore members with GraphQLIgnore attribute
+                var toIgnore = member.GetCustomAttribute<GraphQLinqIgnoreAttribute>() != null;
+
+                if (member != null && !toIgnore)
                 {
                     if (string.IsNullOrEmpty(selectClause))
                     {
@@ -118,7 +121,9 @@ namespace GraphQLinq
         {
             var propertyInfos = targetType.GetProperties();
 
-            var propertiesToInclude = propertyInfos.Where(info => !info.PropertyType.HasNestedProperties());
+            var propertiesToInclude = propertyInfos
+                .Where(info => !info.PropertyType.HasNestedProperties())
+                .Where(info => info.GetCustomAttribute<GraphQLinqIgnoreAttribute>() == null); // ignore properties with GraphQLIgnore attribute
 
             var selectClause = string.Join(Environment.NewLine, propertiesToInclude.Select(info => new string(' ', depth * 2) + info.Name.ToCamelCase()));
 
