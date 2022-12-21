@@ -2,7 +2,7 @@
   "profiles": {
     "Scaffolding": {
       "commandName": "Project",
-      "commandLineArgs": "https://nexus-function-app-staging.azurewebsites.net/api/graphql -o Export -n Affyn.Data"
+      "commandLineArgs": "https://nexus-function-app-staging.azurewebsites.net/api/graphql -o Export -n Affyn.Data -e true"
     }
   }
 }

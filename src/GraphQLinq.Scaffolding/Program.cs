@@ -117,14 +117,15 @@ namespace GraphQLinq.Scaffolding
                 new Option<string>(new []{ "--output", "-o" }, () => "", "Output folder"),
                 new Option<string>(new []{ "--namespace", "-n" }, () => "","Namespace of generated classes"),
                 new Option<string>(new []{ "--context", "-c" }, () => "","Name of the generated context classes"),
+                new Option<bool>(new []{ "--entity", "-e" }, () => false, "Replace IEntity interface by the Entity class?"),
             };
 
-            generate.Handler = CommandHandler.Create<Uri, string, string, string, IConsole>(HandleGenerate);
+            generate.Handler = CommandHandler.Create<Uri, string, string, string, bool, IConsole>(HandleGenerate);
 
             await generate.InvokeAsync(args);
         }
 
-        private static async Task HandleGenerate(Uri endpoint, string output, string @namespace, string context, IConsole console)
+        private static async Task HandleGenerate(Uri endpoint, string output, string @namespace, string context, bool entity, IConsole console)
         {
             //var webClient = new WebClient();
             //webClient.Headers.Add("Content-Type", "application/json");
@@ -165,7 +166,8 @@ namespace GraphQLinq.Scaffolding
                     Namespace = @namespace,
                     NormalizeCasing = true,
                     OutputDirectory = outputFolder,
-                    ContextName = context
+                    ContextName = context,
+                    UseEntity = entity,
                 };
 
                 var graphQLClassesGenerator = new GraphQLClassesGenerator(codeGenerationOptions);
@@ -184,5 +186,6 @@ namespace GraphQLinq.Scaffolding
         public string ContextName { get; set; } = "";
         public string OutputDirectory { get; set; } = "";
         public bool NormalizeCasing { get; set; }
+        public bool UseEntity { get; set; }
     }
 }

@@ -82,6 +82,9 @@ namespace GraphQLinq.Scaffolding
             AnsiConsole.WriteLine("Scaffolding interfaces ...");
             foreach (var interfaceInfo in interfaces)
             {
+                if (options.UseEntity && interfaceInfo.Name == nameof(CustomEntity))
+                    continue;
+
                 var syntax = GenerateInterface(interfaceInfo);
                 FormatAndWriteToFile(syntax, interfaceInfo.Name);
             }
@@ -142,14 +145,25 @@ namespace GraphQLinq.Scaffolding
             if (doc != null)
                 declaration = declaration.WithLeadingTrivia(doc);
 
+            bool isEntity = classInfo.Interfaces.Any(x => x.Name == nameof(CustomEntity.IEntity));
+            if (options.UseEntity && isEntity)
+                declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(nameof(Entity))));
+
             foreach (var @interface in classInfo.Interfaces ?? new List<GraphqlType>())
             {
+                if (options.UseEntity && @interface.Name == nameof(CustomEntity.IEntity))
+                    continue;
+
                 declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(@interface.Name)));
             }
 
             foreach (var field in classInfo.Fields ?? classInfo.InputFields ?? new List<Field>())
             {
                 var fieldName = field.Name.NormalizeIfNeeded(options);
+
+                // Ignore ID field if it's an entity
+                if (options.UseEntity && isEntity && fieldName == nameof(CustomEntity.IEntity.Id))
+                    continue;
 
                 if (fieldName == className)
                 {
