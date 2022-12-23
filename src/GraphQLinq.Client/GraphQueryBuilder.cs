@@ -125,7 +125,9 @@ namespace GraphQLinq
                 .Where(info => !info.PropertyType.HasNestedProperties())
                 .Where(info => info.GetCustomAttribute<GraphQLinqIgnoreAttribute>() == null); // ignore properties with GraphQLIgnore attribute
 
-            var selectClause = string.Join(Environment.NewLine, propertiesToInclude.Select(info => new string(' ', depth * 2) + info.Name.ToCamelCase()));
+            var padding = new string(' ', depth * 2);
+            var selectClause = string.Join(Environment.NewLine, propertiesToInclude
+                .Select(info => $"{padding}{info.Name}: {info.Name.ToCamelCase()}"));
 
             return selectClause;
         }
