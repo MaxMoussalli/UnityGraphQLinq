@@ -95,15 +95,25 @@ namespace GraphQLinq.Scaffolding
             var queryExtensions = GenerateQueryExtensions(classesWithArgFields);
             FormatAndWriteToFile(queryExtensions, "QueryExtensions");
 
-            AnsiConsole.WriteLine("Scaffolding GraphQLContext ...");
             // Generate Queries into QueryContext
-            var queryClass = schema.Types.Single(type => type.Name == queryType);
-            var graphContext = GenerateGraphContext(queryClass, endpointUrl);
-            FormatAndWriteToFile(graphContext, $"{options.ContextName}{queryClass.Name}Context");
+            var queryContextName = $"{options.ContextName}{queryType}Context";
+            var queryClass = schema.Types.SingleOrDefault(type => type.Name == queryType);
+            if (queryClass != null)
+            {
+                AnsiConsole.WriteLine($"Scaffolding {queryContextName} ...");
+                var graphContext = GenerateGraphContext(queryClass, endpointUrl);
+                FormatAndWriteToFile(graphContext, queryContextName);
+            }
+
             // Generate Mutations into MutationContext
-            var mutationClass = schema.Types.Single(type => type.Name == mutationType);
-            var mutationContext = GenerateGraphContext(mutationClass, endpointUrl);
-            FormatAndWriteToFile(mutationContext, $"{options.ContextName}{mutationClass.Name}Context");
+            var mutationContextName = $"{options.ContextName}{mutationType}Context";
+            var mutationClass = schema.Types.SingleOrDefault(type => type.Name == mutationType);
+            if (mutationClass != null)
+            {
+                AnsiConsole.WriteLine($"Scaffolding {mutationContextName}...");
+                var mutationContext = GenerateGraphContext(mutationClass, endpointUrl);
+                FormatAndWriteToFile(mutationContext, mutationContextName);
+            }
 
             return $"{options.ContextName}Context";
         }
