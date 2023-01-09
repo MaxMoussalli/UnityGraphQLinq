@@ -145,7 +145,7 @@ namespace GraphQLinq.Scaffolding
             if (doc != null)
                 declaration = declaration.WithLeadingTrivia(doc);
 
-            bool isEntity = classInfo.Interfaces.Any(x => x.Name == nameof(CustomEntity.IEntity));
+            var isEntity = classInfo.Interfaces?.Any(x => x.Name == nameof(CustomEntity.IEntity)) ?? false;
             if (options.UseEntity && isEntity)
                 declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(nameof(Entity))));
 
@@ -356,8 +356,7 @@ namespace GraphQLinq.Scaffolding
                 .WithBody(Block());
 
             var baseInitializer = ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                    .AddArgumentListArguments(Argument(IdentifierName("baseUrl")),
-                                                              Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(""))));
+                                    .AddArgumentListArguments(Argument(IdentifierName("baseUrl")));
 
             var baseUrlConstructorDeclaration = ConstructorDeclaration(className)
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
@@ -365,16 +364,18 @@ namespace GraphQLinq.Scaffolding
                                     .WithInitializer(baseInitializer)
                                     .WithBody(Block());
 
-            var baseHttpClientInitializer = ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
-                                    .AddArgumentListArguments(Argument(IdentifierName("webRequest")));
 
-            var httpClientConstructorDeclaration = ConstructorDeclaration(className)
+            var baseInitializerWithHeaders = ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
+                                    .AddArgumentListArguments(Argument(IdentifierName("baseUrl")), Argument(IdentifierName("headers")));
+
+            var baseUrlWithHeadersConstructorDeclaration = ConstructorDeclaration(className)
                                     .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                                    .AddParameterListParameters(Parameter(Identifier("webRequest")).WithType(ParseTypeName("UnityWebRequest")))
-                                    .WithInitializer(baseHttpClientInitializer)
+                                    .AddParameterListParameters(Parameter(Identifier("baseUrl")).WithType(ParseTypeName("string")))
+                                    .AddParameterListParameters(Parameter(Identifier("headers")).WithType(ParseTypeName("Dictionary<string, string>")))
+                                    .WithInitializer(baseInitializerWithHeaders)
                                     .WithBody(Block());
 
-            declaration = declaration.AddMembers(defaultConstructorDeclaration, baseUrlConstructorDeclaration, httpClientConstructorDeclaration);
+            declaration = declaration.AddMembers(defaultConstructorDeclaration, baseUrlConstructorDeclaration, baseUrlWithHeadersConstructorDeclaration);
 
             foreach (var field in queryInfo.Fields)
             {

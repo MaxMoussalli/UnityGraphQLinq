@@ -15,52 +15,28 @@ namespace GraphQLinq
 {
     public abstract class GraphContext : IDisposable
     {
-        private readonly bool ownsHttpClient = false;
-
-        // [MM] XK - Replace HttpClient by UnityWebRequest to make plugin compatible with Unity
-        public UnityWebRequest webRequest { get; }
+        private string m_BaseURL;
 
         // [MM] XK - Add json query args schema to handle non-nullables
         protected abstract string QueriesArgsJson { get; }
         private QueriesArgs m_QueriesArgs;
 
-        protected GraphContext(UnityWebRequest webRequest)
-        {
-            if (webRequest == null)
-            {
-                throw new ArgumentNullException($"{nameof(webRequest)} cannot be null");
-            }
+        public Dictionary<string, string> Headers { get; set; }
 
-            if (webRequest.url == null)
-            {
-                throw new ArgumentException($"{nameof(webRequest.url)} cannot be empty");
-            }
+        public JsonSerializerSettings JsonSerializerOptions { get; set; } = CreateJsonSerializerSettings();
 
-            this.webRequest = webRequest;
-
-            InitQueriesArgs();
-        }
-
-        protected GraphContext(string baseUrl, string authorization)
+        protected GraphContext(string baseUrl, Dictionary<string, string> headers = null)
         {
             if (string.IsNullOrEmpty(baseUrl))
             {
                 throw new ArgumentException($"{nameof(baseUrl)} cannot be empty");
             }
 
-            ownsHttpClient = true;
-            webRequest = UnityWebRequest.Post(baseUrl, UnityWebRequest.kHttpVerbPOST);
-            webRequest.SetRequestHeader("Content-Type", "application/json");
-
-            if (!string.IsNullOrEmpty(authorization))
-            {
-                webRequest.SetRequestHeader("Authorization", "Bearer " + authorization);
-            }
+            m_BaseURL = baseUrl;
+            Headers = headers ?? new Dictionary<string, string>();
 
             InitQueriesArgs();
         }
-
-        public JsonSerializerSettings JsonSerializerOptions { get; set; } = CreateJsonSerializerSettings();
 
         // [MM] XK - Replace System.Text.Json by Newtonsoft.Json to make plugin compatible with Unity
         public static JsonSerializerSettings CreateJsonSerializerSettings()
@@ -104,9 +80,23 @@ namespace GraphQLinq
             return arguments;
         }
 
+
+        private UnityWebRequest CreateWebRequest()
+        {
+            var webRequest = UnityWebRequest.Post(m_BaseURL, UnityWebRequest.kHttpVerbPOST);
+            webRequest.SetRequestHeader("Content-Type", "application/json");
+
+            foreach (var header in Headers)
+            {
+                webRequest.SetRequestHeader(header.Key, header.Value);
+            }
+
+            return webRequest;
+        }
+
         public async Task<string> PostAsync(string query)
         {
-            Console.WriteLine("query: " + query);
+            var webRequest = CreateWebRequest();
 
             byte[] postData = Encoding.ASCII.GetBytes(query);
             webRequest.uploadHandler = new UploadHandlerRaw(postData);
@@ -116,17 +106,19 @@ namespace GraphQLinq
                 await Task.Yield(); // to keep in sync with unity thread
 
             if (!string.IsNullOrEmpty(webRequest.error))
+            {
+                webRequest.Dispose();
                 throw new UnityWebRequestException(webRequest.error, query);
+            }
 
-            return webRequest.downloadHandler.text;
+            var res = webRequest.downloadHandler.text;
+            webRequest.Dispose();
+
+            return res;
         }
 
         public void Dispose()
         {
-            if (ownsHttpClient)
-            {
-                webRequest.Dispose();
-            }
         }
 
         private void InitQueriesArgs()
