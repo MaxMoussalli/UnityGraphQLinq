@@ -119,6 +119,9 @@ namespace GraphQLinq
 
         private static string BuildSelectClauseForType(Type targetType, int depth = 1)
         {
+            if (targetType == typeof(string))
+                return "";
+
             var propertyInfos = targetType.GetProperties();
 
             var propertiesToInclude = propertyInfos
