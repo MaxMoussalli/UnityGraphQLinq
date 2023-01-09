@@ -15,7 +15,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingNamesReturnsListOfNames()
         {
-            var query = hslGraphContext.Stations().Select(l => l.name);
+            var query = hslGraphContext.Stations().SubSelect(l => l.name);
 
             var names = await query.ToEnumerable();
 
@@ -49,7 +49,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingNamesAndStopsReturnsStops()
         {
-            var query = hslGraphContext.Stations().Select(location => new { location.name, location.stops });
+            var query = hslGraphContext.Stations().SubSelect(location => new { location.name, location.stops });
 
             var stations = await query.ToEnumerable();
 
@@ -60,7 +60,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingNamesWithAliasAndStopsReturnsStopsAndNames()
         {
-            var query = hslGraphContext.Stations().Select(location => new { StationName = location.name, location.stops });
+            var query = hslGraphContext.Stations().SubSelect(location => new { StationName = location.name, location.stops });
 
             var stations = await query.ToEnumerable();
 

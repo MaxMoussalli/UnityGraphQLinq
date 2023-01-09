@@ -19,7 +19,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingSingleTripIdIsNotNull()
         {
-            var tripId = await hslGraphContext.Trip(TripId).Select(t => t.gtfsId).ToItem();
+            var tripId = await hslGraphContext.Trip(TripId).SubSelect(t => t.gtfsId).ToItem();
 
             Assert.That(tripId, Is.Not.Null);
         }
@@ -28,7 +28,7 @@ namespace GraphQLinq.Tests
         public async Task SelectingNestedPropertiesOfSingleTripNestedPropertiesAreNotNull()
         {
             var item = await hslGraphContext.Trip(TripId)
-                .Select(trip => new TripDetails(trip.gtfsId, trip.route.gtfsId, trip.pattern.geometry, trip.route.agency.name, trip.route.agency.phone))
+                .SubSelect(trip => new TripDetails(trip.gtfsId, trip.route.gtfsId, trip.pattern.geometry, trip.route.agency.name, trip.route.agency.phone))
                 .ToItem();
 
             Assert.Multiple(() =>
@@ -45,7 +45,7 @@ namespace GraphQLinq.Tests
         public async Task SelectingNestedPropertiesOfSingleTripAndCallingConstructorNestedPropertiesAreNotNull()
         {
             var item = await hslGraphContext.Trip(TripId)
-                .Select(trip => new TripDetails(trip.gtfsId, trip.route.gtfsId, trip.pattern.geometry, trip.route.agency.name, trip.route.agency.phone))
+                .SubSelect(trip => new TripDetails(trip.gtfsId, trip.route.gtfsId, trip.pattern.geometry, trip.route.agency.name, trip.route.agency.phone))
                 .ToItem();
 
             Assert.Multiple(() =>
@@ -61,7 +61,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingThreeLevelNestedPropertyOfSingleTripNestedPropertyIsNotNull()
         {
-            var routes = await hslGraphContext.Trip(TripId).Select(trip => trip.route.agency.routes).ToItem();
+            var routes = await hslGraphContext.Trip(TripId).SubSelect(trip => trip.route.agency.routes).ToItem();
 
             CollectionAssert.IsNotEmpty(routes);
         }

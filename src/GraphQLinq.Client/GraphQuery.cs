@@ -18,6 +18,7 @@ namespace GraphQLinq
         internal List<IncludeDetails> Includes { get; private set; } = new List<IncludeDetails>();
         internal Dictionary<string, object> Arguments { get; set; } = new Dictionary<string, object>();
         internal GraphContext Context => context;
+        internal bool UseMapper { get; set; }
 
         internal GraphQuery(GraphContext graphContext, string queryName)
         {
@@ -146,7 +147,7 @@ namespace GraphQLinq
             return graphQuery;
         }
 
-        protected GraphQuery<TResult> BuildSelect<TResult>(Expression<Func<T, TResult>> resultSelector)
+        protected GraphQuery<TResult> BuildSubSelect<TResult>(Expression<Func<T, TResult>> resultSelector)
         {
             if (resultSelector.NodeType != ExpressionType.Lambda)
             {
@@ -155,6 +156,21 @@ namespace GraphQLinq
 
             var graphQuery = Clone<TResult>();
             graphQuery.Selector = resultSelector;
+            graphQuery.UseMapper = true;
+
+            return graphQuery;
+        }
+
+        protected GraphQuery<T> BuildSelect<TResult>(Expression<Func<T, TResult>> resultSelector)
+        {
+            if (resultSelector.NodeType != ExpressionType.Lambda)
+            {
+                throw new ArgumentException($"{resultSelector} must be lambda expression", nameof(resultSelector));
+            }
+
+            var graphQuery = Clone<T>();
+            graphQuery.Selector = resultSelector;
+            graphQuery.UseMapper = false;
 
             return graphQuery;
         }
@@ -163,7 +179,9 @@ namespace GraphQLinq
         {
             var query = lazyQuery.Value;
 
-            var mapper = (Func<TSource, T>)Selector?.Compile();
+            Func<TSource, T> mapper = null;
+            if (UseMapper)
+                mapper = (Func<TSource, T>)Selector?.Compile();
 
             return new GraphQueryExecutor<T, TSource>(context, query.FullQuery, queryType, mapper);
         }
@@ -178,9 +196,26 @@ namespace GraphQLinq
             return (GraphItemQuery<T>)BuildInclude(path);
         }
 
-        public GraphItemQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> resultSelector)
+        /// <summary>
+        /// To get a subset of the data, this will break the data cache ability if it inherit from Entity
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        public GraphItemQuery<TResult> SubSelect<TResult>(Expression<Func<T, TResult>> resultSelector)
         {
-            return (GraphItemQuery<TResult>)BuildSelect(resultSelector);
+            return (GraphItemQuery<TResult>)BuildSubSelect(resultSelector);
+        }
+
+        /// <summary>
+        /// To query a subset of the data but use the whole data to store it, this will preserve the data cache ability if it inherit from Entity
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        public GraphItemQuery<T> Select<TResult>(Expression<Func<T, TResult>> resultSelector)
+        {
+            return (GraphItemQuery<T>)BuildSelect(resultSelector);
         }
 
         public abstract Task<T> ToItem();
@@ -197,9 +232,26 @@ namespace GraphQLinq
             return (GraphCollectionQuery<T>)BuildInclude(path);
         }
 
-        public GraphCollectionQuery<TResult> Select<TResult>(Expression<Func<T, TResult>> resultSelector)
+        /// <summary>
+        /// To get a subset of the data, this will break the data cache ability if it inherit from Entity
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        public GraphCollectionQuery<TResult> SubSelect<TResult>(Expression<Func<T, TResult>> resultSelector)
         {
-            return (GraphCollectionQuery<TResult>)BuildSelect(resultSelector);
+            return (GraphCollectionQuery<TResult>)BuildSubSelect(resultSelector);
+        }
+
+        /// <summary>
+        /// To query a subset of the data but use the whole data to store it, this will preserve the data cache ability if it inherit from Entity
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="resultSelector"></param>
+        /// <returns></returns>
+        public GraphCollectionQuery<T> Select<TResult>(Expression<Func<T, TResult>> resultSelector)
+        {
+            return (GraphCollectionQuery<T>)BuildSelect(resultSelector);
         }
     }
 

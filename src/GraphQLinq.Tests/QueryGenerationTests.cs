@@ -13,7 +13,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void SelectingSinglePropertyQueryIncludesSelectedProperty()
         {
-            var locations = context.Locations().Select(l => l.city);
+            var locations = context.Locations().SubSelect(l => l.city);
 
             Assert.That(locations.Query, Does.Contain("city"));
         }
@@ -21,7 +21,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void SelectingMultiplePropertiesQueryIncludesSelectedProperties()
         {
-            var locations = context.Locations().Select(l => new { l.city, l.region });
+            var locations = context.Locations().SubSelect(l => new { l.city, l.region });
 
             Assert.That(locations.Query, Does.Contain("city").And.Contains("region"));
         }
@@ -29,7 +29,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void SelectingNavigationPropertyQueryIncludesPropertiesOfNavigationProperty()
         {
-            var locations = context.Locations().Select(l => l.salesPhone);
+            var locations = context.Locations().SubSelect(l => l.salesPhone);
 
             Assert.That(locations.Query, Does.Contain("number").And.Contains("label"));
         }
@@ -37,7 +37,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void SelectingListOfStringNavigationPropertyQueryDoesNotIncludesPropertiesOfNavigationProperty()
         {
-            var locations = context.Locations().Select(l => l.locationType);
+            var locations = context.Locations().SubSelect(l => l.locationType);
 
             Assert.That(locations.Query, Does.Not.Contain("length").And.Not.Contains("chars"));
         }
@@ -45,7 +45,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void SelectingPrimitiveAndNavigationPropertyQueryIncludesPropertiesOfNavigationProperty()
         {
-            var locations = context.Locations().Select(l => new { l.salesPhone, l.city });
+            var locations = context.Locations().SubSelect(l => new { l.salesPhone, l.city });
 
             Assert.That(locations.Query, Does.Contain("number").And.Contains("label").And.Contains("city"));
         }
@@ -53,7 +53,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void SelectingPropertyQueryIncludesPropertyInCamelCase()
         {
-            var locations = context.Locations().Select(l => l.Country);
+            var locations = context.Locations().SubSelect(l => l.Country);
 
             Assert.That(locations.Query, Does.Contain("country"));
         }
@@ -89,7 +89,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void FilteringQueryWithScalarParameterGeneratedQueryIncludesPassedParameter()
         {
-            var locations = context.Locations(openSoon: true).Select(l => l.city);
+            var locations = context.Locations(openSoon: true).SubSelect(l => l.city);
 
             Assert.Multiple(() =>
             {
@@ -101,7 +101,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void FilteringQueryWithCollectionParameterGeneratedQueryIncludesPassedParameter()
         {
-            var locations = context.Locations(type: new List<LocationType> { LocationType.SERVICE, LocationType.STORE }).Select(l => l.city);
+            var locations = context.Locations(type: new List<LocationType> { LocationType.SERVICE, LocationType.STORE }).SubSelect(l => l.city);
 
             var query = locations.ToString();
 
@@ -111,7 +111,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void FilteringQueryWithCollectionParameterGeneratedQueryIncludesPassedParameterTypeInformation()
         {
-            var locations = context.Locations(type: new List<LocationType> { LocationType.SERVICE, LocationType.STORE }).Select(l => l.city);
+            var locations = context.Locations(type: new List<LocationType> { LocationType.SERVICE, LocationType.STORE }).SubSelect(l => l.city);
 
             var query = locations.ToString();
 
@@ -121,7 +121,7 @@ namespace GraphQLinq.Tests
         [Test]
         public void FilteringQueryWithCollectionParameterGeneratedQueryFiltersLocationsByType()
         {
-            var locations = context.Locations(type: new List<LocationType> { LocationType.SERVICE, LocationType.STORE }).Select(l => l.city);
+            var locations = context.Locations(type: new List<LocationType> { LocationType.SERVICE, LocationType.STORE }).SubSelect(l => l.city);
 
             var query = locations.ToString();
 

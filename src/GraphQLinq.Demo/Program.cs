@@ -31,10 +31,10 @@ namespace GraphQLinq.Demo
 
             #region Specific properties of company
             //Use an anonymous type to select specific properties
-            var companySummaryAnonymous = spaceXContext.Company().Select(c => new { c.Ceo, c.Name, c.Headquarters }).ToItem();
+            var companySummaryAnonymous = spaceXContext.Company().SubSelect(c => new { c.Ceo, c.Name, c.Headquarters }).ToItem();
 
             //Use data class to select specific properties
-            var companySummary = await spaceXContext.Company().Select(c => new CompanySummary
+            var companySummary = await spaceXContext.Company().SubSelect(c => new CompanySummary
             {
                 Ceo = c.Ceo,
                 Name = c.Name,

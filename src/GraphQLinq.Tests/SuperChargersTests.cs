@@ -15,7 +15,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingCitiesReturnsListOfCities()
         {   
-            var query = superChargersContext.Locations(type: locationTypes).Select(l => l.city);
+            var query = superChargersContext.Locations(type: locationTypes).SubSelect(l => l.city);
 
             var locations = await query.ToEnumerable();
 
@@ -45,7 +45,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingCitiesAndPhonesReturnsPhones()
         {
-            var query = superChargersContext.Locations(type: locationTypes).Select(location => new { location.city, location.salesPhone });
+            var query = superChargersContext.Locations(type: locationTypes).SubSelect(location => new { location.city, location.salesPhone });
 
             var locations = await query.ToEnumerable();
 
@@ -56,7 +56,7 @@ namespace GraphQLinq.Tests
         [Test]
         public async Task SelectingCitiesWithAliasAndPhonesReturnsPhonesAndCities()
         {
-            var query = superChargersContext.Locations(type: locationTypes).Select(location => new { CityName = location.city, location.salesPhone });
+            var query = superChargersContext.Locations(type: locationTypes).SubSelect(location => new { CityName = location.city, location.salesPhone });
 
             var locations = await query.ToEnumerable();
 
