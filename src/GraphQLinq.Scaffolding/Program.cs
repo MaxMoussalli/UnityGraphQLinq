@@ -47,6 +47,14 @@ namespace GraphQLinq.Scaffolding
                   ofType {
                     name
                     kind
+                    ofType {
+                      name
+                      kind
+                      ofType {
+                        name
+                        kind
+                      }
+                    }
                   }
                 }
               }
@@ -69,6 +77,22 @@ namespace GraphQLinq.Scaffolding
                 ofType {
                   name
                   kind
+                  ofType {
+                    name
+                    kind
+                    ofType {
+                      name
+                      kind
+                      ofType {
+                        name
+                        kind
+                        ofType {
+                          name
+                          kind
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -90,6 +114,22 @@ namespace GraphQLinq.Scaffolding
               ofType {
                 name
                 kind
+                ofType {
+                  name
+                  kind
+                  ofType {
+                    name
+                    kind
+                    ofType {
+                      name
+                      kind
+                      ofType {
+                        name
+                        kind
+                      }
+                    }
+                  }
+                }
               }
             }
           }
