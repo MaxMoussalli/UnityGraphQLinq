@@ -22,7 +22,14 @@ namespace GraphQLinq
         public delegate void OnUpdatedHandler(Entity entity);
         public event OnUpdatedHandler OnUpdated;
 
-        internal static Dictionary<ID, Entity> ExistingEntities { get; set; } = new Dictionary<ID, Entity>();
+        internal static Dictionary<ID, Entity> s_ExistingEntities { get; set; } = new Dictionary<ID, Entity>();
+        public static Entity GetCachedEntity(ID id)
+        {
+            s_ExistingEntities.TryGetValue(id, out Entity entity);
+            return entity;
+        }
+
+        public static IEnumerable<Entity> ExistingEntities => s_ExistingEntities.Values;
 
         /// <summary>
         /// 
@@ -42,12 +49,12 @@ namespace GraphQLinq
         public Entity(ID id)
         {
             Id = id;
-            ExistingEntities.Add(Id, this);
+            s_ExistingEntities.Add(Id, this);
         }
 
         public void Dispose()
         {
-            ExistingEntities.Remove(Id);
+            s_ExistingEntities.Remove(Id);
         }
 
         [OnDeserialized]
@@ -84,7 +91,7 @@ namespace GraphQLinq
             using (reader = jObject.CreateReader())
             {
                 Entity entity = existingValue as Entity;
-                if (entity != null || Entity.ExistingEntities.TryGetValue(id, out entity))
+                if (entity != null || Entity.s_ExistingEntities.TryGetValue(id, out entity))
                 {
                     // Populate existing data
                     serializer.Populate(reader, entity);
@@ -94,7 +101,7 @@ namespace GraphQLinq
                     // Create new instance and add it to ExistingEntities
                     entity = (Entity)Activator.CreateInstance(objectType);
                     serializer.Populate(reader, entity);
-                    Entity.ExistingEntities.Add(entity.Id, entity);
+                    Entity.s_ExistingEntities.Add(entity.Id, entity);
                 }
 
                 return entity;
