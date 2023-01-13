@@ -41,7 +41,7 @@ namespace GraphQLinq
         // [MM] XK - Replace System.Text.Json by Newtonsoft.Json to make plugin compatible with Unity
         public static JsonSerializerSettings CreateJsonSerializerSettings()
         {
-            var contractResolver = new DefaultContractResolver
+            var contractResolver = new CollectionClearingContractResolver()
             {
                 NamingStrategy = new CamelCaseNamingStrategy()
             };
