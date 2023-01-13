@@ -225,15 +225,15 @@ namespace GraphQLinq.Scaffolding
                             .Select(line => XmlTextLiteral(line))
                             .ToList();
             for (int i = 1; i < tokens.Count; i += 2)
-                tokens.Insert(i, XmlTextNewLine("\n"));
+                tokens.Insert(i, XmlTextNewLine(Environment.NewLine));
 
             // add new line between summmary tags
-            tokens.Insert(0, XmlTextNewLine("\n"));
-            tokens.Add(XmlTextNewLine("\n"));
+            tokens.Insert(0, XmlTextNewLine(Environment.NewLine));
+            tokens.Add(XmlTextNewLine(Environment.NewLine));
 
             // Create comment
             var summary = XmlElement("summary", SingletonList<XmlNodeSyntax>(XmlText(TokenList(tokens))));
-            SyntaxTriviaList doc = TriviaList(Trivia(DocumentationComment(summary, XmlText("\n"))));
+            SyntaxTriviaList doc = TriviaList(Trivia(DocumentationComment(summary, XmlText(Environment.NewLine))));
             return doc;
         }
 
