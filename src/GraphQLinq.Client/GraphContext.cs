@@ -15,6 +15,9 @@ namespace GraphQLinq
 {
     public abstract class GraphContext : IDisposable
     {
+        public delegate void OnLogHandler(string log);
+        public OnLogHandler OnLog;
+
         private string m_BaseURL;
 
         // [MM] XK - Add json query args schema to handle non-nullables
@@ -96,6 +99,8 @@ namespace GraphQLinq
 
         public async Task<string> PostAsync(string query)
         {
+            OnLog?.Invoke(GetType().ToString() + " - Send Query: " + query);
+
             var webRequest = CreateWebRequest();
 
             byte[] postData = Encoding.ASCII.GetBytes(query);
@@ -107,12 +112,16 @@ namespace GraphQLinq
 
             if (!string.IsNullOrEmpty(webRequest.error))
             {
+                var error = webRequest.error;
                 webRequest.Dispose();
-                throw new UnityWebRequestException(webRequest.error, query);
+                OnLog?.Invoke(GetType().ToString() + " - Receive Error: " + error);
+                throw new UnityWebRequestException(error, query);
             }
 
             var res = webRequest.downloadHandler.text;
             webRequest.Dispose();
+
+            OnLog?.Invoke(GetType().ToString() + " - Receive Result: " + res);
 
             return res;
         }
