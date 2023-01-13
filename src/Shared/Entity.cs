@@ -71,7 +71,7 @@ namespace GraphQLinq
     /// </summary>
     internal class EntitySerializer : JsonConverter
     {
-        public override bool CanWrite { get { return false; } }
+        public override bool CanWrite => false;
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
@@ -82,7 +82,14 @@ namespace GraphQLinq
         {
             // Read Id value
             JObject jObject = JObject.Load(reader);
-            var id = jObject["Id"].Value<string>();
+
+            if (!jObject.TryGetValue("id", StringComparison.OrdinalIgnoreCase, out var token))
+                throw new SerializationException("Entity Id not found");
+
+            if (token.Type != JTokenType.String)
+                throw new SerializationException("Entity Id is not a string");
+
+            var id = token.Value<string>();
 
             if (id == null)
                 return null;
