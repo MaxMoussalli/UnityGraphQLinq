@@ -33,13 +33,13 @@ namespace GraphQLinq
                 {
                     case MemberExpression memberExpression:
                         var member = memberExpression.Member;
-                        selectClause = BuildMemberAccessSelectClause(body, selectClause, padding, member.Name);
+                        selectClause = BuildMemberAccessSelectClause(body, selectClause, padding);
                         break;
 
                     case NewExpression newExpression:
                         foreach (var argument in newExpression.Arguments.OfType<MemberExpression>())
                         {
-                            var selectField = BuildMemberAccessSelectClause(argument, selectClause, padding, argument.Member.Name);
+                            var selectField = BuildMemberAccessSelectClause(argument, selectClause, padding);
                             fields.Add(selectField);
                         }
                         selectClause = string.Join(Environment.NewLine, fields);
@@ -48,7 +48,7 @@ namespace GraphQLinq
                     case MemberInitExpression memberInitExpression:
                         foreach (var argument in memberInitExpression.Bindings.OfType<MemberAssignment>())
                         {
-                            var selectField = BuildMemberAccessSelectClause(argument.Expression, selectClause, padding, argument.Member.Name);
+                            var selectField = BuildMemberAccessSelectClause(argument.Expression, selectClause, padding);
                             fields.Add(selectField);
                         }
                         selectClause = string.Join(Environment.NewLine, fields);
@@ -85,7 +85,7 @@ namespace GraphQLinq
             return new GraphQLQuery(graphQLQuery, queryVariables, json);
         }
 
-        private static string BuildMemberAccessSelectClause(Expression body, string selectClause, string padding, string alias)
+        private static string BuildMemberAccessSelectClause(Expression body, string selectClause, string padding, string alias = null)
         {
             if (body is MemberExpression memberExpression)
             {
@@ -98,7 +98,8 @@ namespace GraphQLinq
                 {
                     if (string.IsNullOrEmpty(selectClause))
                     {
-                        selectClause = $"{padding}{alias}: {member.Name.ToCamelCase()}";
+                        var aliasStr = string.IsNullOrEmpty(alias) ? "" : $"{alias}: ";
+                        selectClause = $"{padding}{aliasStr}{member.Name.ToCamelCase()}";
 
                         if (!member.PropertyType.GetTypeOrListType().IsValueTypeOrString())
                         {
@@ -110,7 +111,7 @@ namespace GraphQLinq
                     {
                         selectClause = $"{member.Name.ToCamelCase()} {{ {Environment.NewLine}{selectClause}}}";
                     }
-                    return BuildMemberAccessSelectClause(memberExpression.Expression, selectClause, padding, "");
+                    return BuildMemberAccessSelectClause(memberExpression.Expression, selectClause, padding);
                 }
                 return selectClause;
             }
@@ -130,7 +131,7 @@ namespace GraphQLinq
 
             var padding = new string(' ', depth * 2);
             var selectClause = string.Join(Environment.NewLine, propertiesToInclude
-                .Select(info => $"{padding}{info.Name}: {info.Name.ToCamelCase()}"));
+                .Select(info => $"{padding}{info.Name.ToCamelCase()}"));
 
             return selectClause;
         }
