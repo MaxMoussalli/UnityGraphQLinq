@@ -157,15 +157,16 @@ namespace GraphQLinq.Scaffolding
                 new Option<string>(new []{ "--output", "-o" }, () => "", "Output folder"),
                 new Option<string>(new []{ "--namespace", "-n" }, () => "","Namespace of generated classes"),
                 new Option<string>(new []{ "--context", "-c" }, () => "","Name of the generated context classes"),
+                new Option<string>(new []{ "--suffix", "-s" }, () => "", "Add a suffix to all generated classes"),
                 new Option<bool>(new []{ "--entity", "-e" }, () => false, "Replace IEntity interface by the Entity class?"),
             };
 
-            generate.Handler = CommandHandler.Create<Uri, string, string, string, bool, IConsole>(HandleGenerate);
+            generate.Handler = CommandHandler.Create<Uri, string, string, string, string, bool, IConsole>(HandleGenerate);
 
             await generate.InvokeAsync(args);
         }
 
-        private static async Task HandleGenerate(Uri endpoint, string output, string @namespace, string context, bool entity, IConsole console)
+        private static async Task HandleGenerate(Uri endpoint, string output, string @namespace, string context, string suffix, bool entity, IConsole console)
         {
             //var webClient = new WebClient();
             //webClient.Headers.Add("Content-Type", "application/json");
@@ -204,6 +205,7 @@ namespace GraphQLinq.Scaffolding
                 var codeGenerationOptions = new CodeGenerationOptions
                 {
                     Namespace = @namespace,
+                    Suffix = suffix,
                     NormalizeCasing = true,
                     OutputDirectory = outputFolder,
                     ContextName = context,
@@ -223,6 +225,7 @@ namespace GraphQLinq.Scaffolding
     class CodeGenerationOptions
     {
         public string? Namespace { get; set; } = "";
+        public string Suffix { get; set; } = "";
         public string ContextName { get; set; } = "";
         public string OutputDirectory { get; set; } = "";
         public bool NormalizeCasing { get; set; }

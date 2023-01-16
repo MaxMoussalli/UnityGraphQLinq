@@ -145,7 +145,7 @@ namespace GraphQLinq.Scaffolding
 
             var semicolonToken = Token(SyntaxKind.SemicolonToken);
 
-            var className = classInfo.Name.NormalizeIfNeeded(options);
+            var className = (classInfo.Name + options.Suffix).NormalizeIfNeeded(options);
 
             var declaration = ClassDeclaration(className)
                                 .AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword));
@@ -525,12 +525,14 @@ namespace GraphQLinq.Scaffolding
                 case TypeKind.NonNull:
                     strFormat = "{0}!";
                     break;
-                case TypeKind.Scalar:
+                case TypeKind.InputObject:
                 case TypeKind.Object:
+                    strFormat = "{0}" + options.Suffix;
+                    break;
+                case TypeKind.Scalar:
                 case TypeKind.Interface:
                 case TypeKind.Union:
                 case TypeKind.Enum:
-                case TypeKind.InputObject:
                 default:
                     strFormat = "{0}";
                     break;
@@ -593,11 +595,11 @@ namespace GraphQLinq.Scaffolding
             }
             else
             {
-                (typeName, resultType) = GetMappedType(fieldType.Name);
+                (typeName, resultType) = GetMappedType(fieldType.Name, fieldType.Kind);
 
                 if (resultType == null && fieldType.Kind == TypeKind.Scalar)
                 {
-                    (typeName, resultType) = GetMappedType("string");
+                    (typeName, resultType) = GetMappedType("string", TypeKind.Scalar);
                 }
             }
 
@@ -616,10 +618,24 @@ namespace GraphQLinq.Scaffolding
             return (typeName, resultType);
         }
 
-
-        private (string, Type?) GetMappedType(string name)
+        private (string, Type?) GetMappedType(string name, TypeKind type)
         {
-            return TypeMapping.ContainsKey(name) ? TypeMapping[name] : new(name.NormalizeIfNeeded(options), null);
+            return TypeMapping.ContainsKey(name) 
+                ? TypeMapping[name] 
+                : new (AddSuffixIfNeeded(name, type).NormalizeIfNeeded(options), null);
+        }
+
+        private string AddSuffixIfNeeded(string name, TypeKind type)
+        {
+            if (TypeKindNeedSuffix(type))
+                return name + options.Suffix;
+
+            return name;
+        }
+
+        private bool TypeKindNeedSuffix(TypeKind type)
+        {
+            return type == TypeKind.Object || type == TypeKind.InputObject;
         }
 
         private string EscapeIdentifierName(string name)
