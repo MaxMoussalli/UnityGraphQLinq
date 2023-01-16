@@ -137,6 +137,8 @@ namespace GraphQLinq.Scaffolding
                 declaration = declaration.AddMembers(EnumMemberDeclaration(Identifier(EscapeIdentifierName(enumValue.Name))));
             }
 
+            declaration = declaration.AddMembers(EnumMemberDeclaration(Identifier(EscapeIdentifierName("COUNT"))));
+
             return topLevelDeclaration.AddMembers(declaration);
         }
 
