@@ -76,7 +76,8 @@ namespace GraphQLinq.Scaffolding
             foreach (var classInfo in classes)
             {
                 var syntax = GenerateClass(classInfo);
-                FormatAndWriteToFile(syntax, classInfo.Name);
+                var suffix = TypeKindNeedSuffix(classInfo.Kind) ? options.Suffix : "";
+                FormatAndWriteToFile(syntax, classInfo.Name + suffix);
             }
 
             AnsiConsole.WriteLine("Scaffolding interfaces ...");
