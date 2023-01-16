@@ -13,6 +13,11 @@ namespace GraphQLinq
 
         public static implicit operator ID(string id) => new ID() { m_ID = id };
         public static implicit operator string(ID id) => id.m_ID;
+
+        public override string ToString()
+        {
+            return m_ID;
+        }
     }
 
     /// <summary>
