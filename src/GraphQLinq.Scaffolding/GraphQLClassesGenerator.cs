@@ -186,7 +186,7 @@ namespace GraphQLinq.Scaffolding
 
                 var (fieldTypeName, fieldType) = GetSharpTypeName(field.Type);
 
-                if (NeedsNullable(fieldType, field.Type))
+                if (NeedsNullable(fieldType, field.Type, true))
                 {
                     fieldTypeName += "?";
                 }
@@ -257,7 +257,7 @@ namespace GraphQLinq.Scaffolding
 
             foreach (var field in interfaceInfo.Fields)
             {
-                var (fieldTypeName, fieldType) = GetSharpTypeName(field.Type);
+                var (fieldTypeName, fieldType) = GetSharpTypeName(field.Type, true);
 
                 if (NeedsNullable(fieldType, field.Type))
                 {
@@ -545,14 +545,14 @@ namespace GraphQLinq.Scaffolding
             return string.Format(strFormat, subType);
         }
 
-        private static bool NeedsNullable(Type? systemType, FieldType type)
+        private static bool NeedsNullable(Type? systemType, FieldType type, bool forceNullable = false)
         {
             if (systemType == null)
             {
                 return false;
             }
 
-            return type.Kind == TypeKind.Scalar && systemType.IsValueType;
+            return (type.Kind == TypeKind.Scalar || forceNullable) && (systemType.IsValueType || systemType == typeof(Enum));
         }
 
 
@@ -623,6 +623,11 @@ namespace GraphQLinq.Scaffolding
 
         private (string, Type?) GetMappedType(string name, TypeKind type)
         {
+            if (type == TypeKind.Enum)
+            {
+                return (name.NormalizeIfNeeded(options), typeof(Enum));
+            }
+
             return TypeMapping.ContainsKey(name) 
                 ? TypeMapping[name] 
                 : new (AddSuffixIfNeeded(name, type).NormalizeIfNeeded(options), null);
