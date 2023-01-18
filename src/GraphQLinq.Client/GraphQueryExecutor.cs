@@ -64,13 +64,13 @@ namespace GraphQLinq
             var dataElement = doc.Root.SelectToken(DataPathPropertyName);
             if (dataElement == null)
             {
-                throw new GraphQueryExecutionException(query);
+                throw new GraphQueryExecutionException(query, streamContent);
             }
 
             var resultElement = dataElement.SelectToken(GraphQueryBuilder<T>.ResultAlias);
             if (resultElement == null)
             {
-                throw new GraphQueryExecutionException(query);
+                throw new GraphQueryExecutionException(query, streamContent);
             }
 
             if (queryType == QueryType.Item)
