@@ -69,7 +69,12 @@ namespace GraphQLinq.Scaffolding
             foreach (var enumInfo in enums)
             {
                 var syntax = GenerateEnum(enumInfo);
-                FormatAndWriteToFile(syntax, enumInfo.Name);
+                var name = enumInfo.Name;
+                if (options.UseInterfaceAndEnumPrefix)
+                {
+                    name = "E" + name;
+                }
+                FormatAndWriteToFile(syntax, name);
             }
 
             AnsiConsole.WriteLine("Scaffolding classes ...");
@@ -87,7 +92,12 @@ namespace GraphQLinq.Scaffolding
                     continue;
 
                 var syntax = GenerateInterface(interfaceInfo);
-                FormatAndWriteToFile(syntax, interfaceInfo.Name);
+                var name = interfaceInfo.Name;
+                if (options.UseInterfaceAndEnumPrefix)
+                {
+                    name = "I" + name;
+                }
+                FormatAndWriteToFile(syntax, name);
             }
 
             var classesWithArgFields = classes.Where(type => (type.Fields ?? new List<Field>()).Any(field => field.Args.Any())).ToList();
@@ -124,6 +134,11 @@ namespace GraphQLinq.Scaffolding
         {
             var topLevelDeclaration = RoslynUtilities.GetTopLevelNode(options.Namespace);
             var name = enumInfo.Name.NormalizeIfNeeded(options);
+
+            if (options.UseInterfaceAndEnumPrefix)
+            {
+                name = "E" + name;
+            }
 
             var declaration = EnumDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword));
 
@@ -247,6 +262,10 @@ namespace GraphQLinq.Scaffolding
             var semicolonToken = Token(SyntaxKind.SemicolonToken);
 
             var name = interfaceInfo.Name.NormalizeIfNeeded(options);
+            if (options.UseInterfaceAndEnumPrefix)
+            {
+                name = "I" + name;
+            }
 
             var declaration = InterfaceDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword));
 
@@ -625,6 +644,9 @@ namespace GraphQLinq.Scaffolding
         {
             if (type == TypeKind.Enum)
             {
+                if (options.UseInterfaceAndEnumPrefix)
+                    name = "E" + name;
+
                 return (name.NormalizeIfNeeded(options), typeof(Enum));
             }
 

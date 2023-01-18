@@ -149,6 +149,11 @@ namespace GraphQLinq.Scaffolding
 }
 ";
 
+
+        public static ICommandHandler CreateCustom<T1, T2, T3, T4, T5, T6, T7, T8>(
+            Func<T1, T2, T3, T4, T5, T6, T7, T8, Task> action) =>
+            System.CommandLine.Binding.HandlerDescriptor.FromDelegate(action).GetCommandHandler();
+
         private static async Task Main(string[] args)
         {
             var generate = new RootCommand("Scaffold GraphQL client code")
@@ -158,15 +163,16 @@ namespace GraphQLinq.Scaffolding
                 new Option<string>(new []{ "--namespace", "-n" }, () => "","Namespace of generated classes"),
                 new Option<string>(new []{ "--context", "-c" }, () => "","Name of the generated context classes"),
                 new Option<string>(new []{ "--suffix", "-s" }, () => "", "Add a suffix to all generated classes"),
+                new Option<bool>(new []{ "--prefix", "-p" }, () => false, "Add a prefix letter before Interfaces and Enums"),
                 new Option<bool>(new []{ "--entity", "-e" }, () => false, "Replace IEntity interface by the Entity class?"),
             };
 
-            generate.Handler = CommandHandler.Create<Uri, string, string, string, string, bool, IConsole>(HandleGenerate);
+            generate.Handler = CreateCustom<Uri, string, string, string, string, bool, bool, IConsole>(HandleGenerate);
 
             await generate.InvokeAsync(args);
         }
 
-        private static async Task HandleGenerate(Uri endpoint, string output, string @namespace, string context, string suffix, bool entity, IConsole console)
+        private static async Task HandleGenerate(Uri endpoint, string output, string @namespace, string context, string suffix, bool prefix, bool entity, IConsole console)
         {
             //var webClient = new WebClient();
             //webClient.Headers.Add("Content-Type", "application/json");
@@ -209,6 +215,7 @@ namespace GraphQLinq.Scaffolding
                     NormalizeCasing = true,
                     OutputDirectory = outputFolder,
                     ContextName = context,
+                    UseInterfaceAndEnumPrefix = prefix,
                     UseEntity = entity,
                 };
 
@@ -229,6 +236,7 @@ namespace GraphQLinq.Scaffolding
         public string ContextName { get; set; } = "";
         public string OutputDirectory { get; set; } = "";
         public bool NormalizeCasing { get; set; }
+        public bool UseInterfaceAndEnumPrefix { get; set; }
         public bool UseEntity { get; set; }
     }
 }
