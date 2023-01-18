@@ -95,15 +95,9 @@ namespace GraphQLinq
                 sb.Append('\n');
             }
 
-            sb.Append($"Error Code: {Extensions.Code}");
-            sb.Append('\n');
-
-            sb.Append($"Server Stacktrace:");
-            sb.Append('\n');
-            foreach (var stack in Extensions.Exception.Stacktrace)
+            if (Extensions != null)
             {
-                sb.Append('\t');
-                sb.Append(stack);
+                sb.Append(Extensions.ToString());
                 sb.Append('\n');
             }
 
@@ -119,8 +113,40 @@ namespace GraphQLinq
 
     public class ErrorExtensions
     {
+        public string Error { get; set; }
         public string Code { get; set; }
         public ErrorExceptionStacktrace Exception { get; set; }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (Error != null)
+            {
+                sb.Append($"{Error}");
+                sb.Append('\n');
+            }
+
+            if (Code != null)
+            {
+                sb.Append($"Error Code: {Code}");
+                sb.Append('\n');
+            }
+
+            if (Exception?.Stacktrace != null)
+            {
+                sb.Append($"Server Stacktrace:");
+                sb.Append('\n');
+                foreach (var stack in Exception.Stacktrace)
+                {
+                    sb.Append('\t');
+                    sb.Append(stack);
+                    sb.Append('\n');
+                }
+            }
+
+            return sb.ToString();
+        }
     }
 
     public class ErrorExceptionStacktrace
