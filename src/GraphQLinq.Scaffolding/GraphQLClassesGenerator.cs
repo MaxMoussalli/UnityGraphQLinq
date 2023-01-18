@@ -566,6 +566,9 @@ namespace GraphQLinq.Scaffolding
 
         private static bool NeedsNullable(Type? systemType, FieldType type, bool forceNullable = false)
         {
+            if (systemType == typeof(ID))
+                forceNullable = false;
+
             if (systemType == null)
             {
                 return false;
