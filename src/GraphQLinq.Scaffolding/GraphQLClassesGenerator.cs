@@ -69,11 +69,7 @@ namespace GraphQLinq.Scaffolding
             foreach (var enumInfo in enums)
             {
                 var syntax = GenerateEnum(enumInfo);
-                var name = enumInfo.Name;
-                if (options.UseInterfaceAndEnumPrefix)
-                {
-                    name = "E" + name;
-                }
+                var name = GetEnumName(enumInfo.Name);
                 FormatAndWriteToFile(syntax, name);
             }
 
@@ -92,11 +88,7 @@ namespace GraphQLinq.Scaffolding
                     continue;
 
                 var syntax = GenerateInterface(interfaceInfo);
-                var name = interfaceInfo.Name;
-                if (options.UseInterfaceAndEnumPrefix)
-                {
-                    name = "I" + name;
-                }
+                var name = GetInterfaceName(interfaceInfo.Name);
                 FormatAndWriteToFile(syntax, name);
             }
 
@@ -133,12 +125,7 @@ namespace GraphQLinq.Scaffolding
         private SyntaxNode GenerateEnum(GraphqlType enumInfo)
         {
             var topLevelDeclaration = RoslynUtilities.GetTopLevelNode(options.Namespace);
-            var name = enumInfo.Name.NormalizeIfNeeded(options);
-
-            if (options.UseInterfaceAndEnumPrefix)
-            {
-                name = "E" + name;
-            }
+            var name = GetEnumName(enumInfo.Name).NormalizeIfNeeded(options);
 
             var declaration = EnumDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword));
 
@@ -173,16 +160,22 @@ namespace GraphQLinq.Scaffolding
             if (doc != null)
                 declaration = declaration.WithLeadingTrivia(doc);
 
-            var isEntity = classInfo.Interfaces?.Any(x => x.Name == nameof(CustomEntity.IEntity)) ?? false;
+            var isEntity = classInfo.Interfaces?.Any(x =>
+            {
+                string name = GetInterfaceName(x.Name);
+                return name == nameof(CustomEntity.IEntity);
+            }) ?? false;
+
             if (options.UseEntity && isEntity)
                 declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(nameof(Entity))));
 
             foreach (var @interface in classInfo.Interfaces ?? new List<GraphqlType>())
             {
-                if (options.UseEntity && @interface.Name == nameof(CustomEntity.IEntity))
+                string name = GetInterfaceName(@interface.Name);
+                if (options.UseEntity && name == nameof(CustomEntity.IEntity))
                     continue;
 
-                declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(@interface.Name)));
+                declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(name)));
             }
 
             foreach (var field in classInfo.Fields ?? classInfo.InputFields ?? new List<Field>())
@@ -233,6 +226,21 @@ namespace GraphQLinq.Scaffolding
             return topLevelDeclaration;
         }
 
+        private string GetInterfaceName(string name)
+        {
+            if (options.UseInterfaceAndEnumPrefix)
+                return "I" + name;
+
+            return name;
+        }
+        private string GetEnumName(string name)
+        {
+            if (options.UseInterfaceAndEnumPrefix)
+                return "E" + name;
+
+            return name;
+        }
+
         private static SyntaxTriviaList? CreateTriviaComment(string description)
         {
             if (string.IsNullOrEmpty(description))
@@ -261,11 +269,7 @@ namespace GraphQLinq.Scaffolding
 
             var semicolonToken = Token(SyntaxKind.SemicolonToken);
 
-            var name = interfaceInfo.Name.NormalizeIfNeeded(options);
-            if (options.UseInterfaceAndEnumPrefix)
-            {
-                name = "I" + name;
-            }
+            var name = GetInterfaceName(interfaceInfo.Name).NormalizeIfNeeded(options);
 
             var declaration = InterfaceDeclaration(name).AddModifiers(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.PartialKeyword));
 
@@ -647,10 +651,7 @@ namespace GraphQLinq.Scaffolding
         {
             if (type == TypeKind.Enum)
             {
-                if (options.UseInterfaceAndEnumPrefix)
-                    name = "E" + name;
-
-                return (name.NormalizeIfNeeded(options), typeof(Enum));
+                return (GetEnumName(name).NormalizeIfNeeded(options), typeof(Enum));
             }
 
             return TypeMapping.ContainsKey(name) 
