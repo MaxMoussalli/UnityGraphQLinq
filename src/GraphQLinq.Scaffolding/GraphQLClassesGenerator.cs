@@ -167,7 +167,26 @@ namespace GraphQLinq.Scaffolding
             }) ?? false;
 
             if (options.UseEntity && isEntity)
+            {
+                // Add default and id constructors
+                var baseInitializer = ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
+                                        .AddArgumentListArguments();
+                var baseIdInitializer = ConstructorInitializer(SyntaxKind.BaseConstructorInitializer)
+                                        .AddArgumentListArguments(Argument(IdentifierName("id")));
+                var defaultConstructorDeclaration = ConstructorDeclaration(className)
+                                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                        .WithInitializer(baseInitializer)
+                                        .WithBody(Block());
+                var idConstructorDeclaration = ConstructorDeclaration(className)
+                                        .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                                        .AddParameterListParameters(Parameter(Identifier("id")).WithType(ParseTypeName(nameof(ID))))
+                                        .WithInitializer(baseIdInitializer)
+                                        .WithBody(Block());
+                declaration = declaration.AddMembers(defaultConstructorDeclaration, idConstructorDeclaration);
+
+                // add inheritance with Entity class
                 declaration = declaration.AddBaseListTypes(SimpleBaseType(ParseTypeName(nameof(Entity))));
+            }
 
             foreach (var @interface in classInfo.Interfaces ?? new List<GraphqlType>())
             {
