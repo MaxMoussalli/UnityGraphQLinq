@@ -21,7 +21,8 @@ namespace GraphQLinq
             var passedArguments = graphQuery.Arguments.Where(pair => pair.Value != null).ToList();
             var queryVariables = passedArguments.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-            if (graphQuery.Selector != null)
+            bool hasSelector = graphQuery.Selector != null;
+            if (hasSelector)
             {
                 var body = graphQuery.Selector.Body;
 
@@ -57,15 +58,13 @@ namespace GraphQLinq
                         throw new NotSupportedException($"Selector of type {body.NodeType} is not implemented yet");
                 }
             }
-            else
-            {
-                var select = BuildSelectClauseForType(typeof(T), includes);
-                selectClause = select.SelectClause;
 
-                foreach (var item in select.IncludeArguments)
-                {
-                    queryVariables.Add(item.Key, item.Value);
-                }
+            // Handle include clauses
+            var select = BuildSelectClauseForType(typeof(T), includes, !hasSelector);
+            selectClause += select.SelectClause;
+            foreach (var item in select.IncludeArguments)
+            {
+                queryVariables.Add(item.Key, item.Value);
             }
 
             var isScalarQuery = string.IsNullOrEmpty(selectClause);
@@ -136,9 +135,9 @@ namespace GraphQLinq
             return selectClause;
         }
 
-        private static SelectClauseDetails BuildSelectClauseForType(Type targetType, List<IncludeDetails> includes)
+        private static SelectClauseDetails BuildSelectClauseForType(Type targetType, List<IncludeDetails> includes, bool includeDefaultSelect = true)
         {
-            var selectClause = BuildSelectClauseForType(targetType);
+            var selectClause = includeDefaultSelect ? BuildSelectClauseForType(targetType) : "";
             var includeVariables = new Dictionary<string, object>();
 
             for (var index = 0; index < includes.Count; index++)
