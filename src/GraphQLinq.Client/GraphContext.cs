@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using GraphQLinq.Shared;
 using GraphQLinq.Shared.Scaffolding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -54,7 +55,7 @@ namespace GraphQLinq
             return new JsonSerializerSettings
             {
                 ContractResolver = contractResolver,
-                Converters = { new StringEnumConverter() },
+                Converters = { new StringEnumConverter(), new TimeSpanConverter() },
                 DefaultValueHandling = DefaultValueHandling.Ignore,
             };
         }
