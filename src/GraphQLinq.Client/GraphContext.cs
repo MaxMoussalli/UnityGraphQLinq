@@ -28,6 +28,8 @@ namespace GraphQLinq
 
         public JsonSerializerSettings JsonSerializerOptions { get; set; } = CreateJsonSerializerSettings();
 
+        public abstract string QueryKeyword { get; }
+
         protected GraphContext(string baseUrl, Dictionary<string, string> headers = null)
         {
             if (string.IsNullOrEmpty(baseUrl))

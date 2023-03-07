@@ -402,6 +402,9 @@ namespace GraphQLinq.Scaffolding
             // [MM] XK - generate a prop to store the json of args for all queries (to handle non-nullable types)
             declaration = AddQueriesArgsJsonProp(queryInfo, declaration);
 
+            // [MM] XK - store query keyword by overriding QueryKeyword property (query, mutation, ...)
+            declaration = AddQueryKeywordProp(queryInfo, declaration);
+
             var thisInitializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer)
                                     .AddArgumentListArguments(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(endpointUrl))));
 
@@ -512,8 +515,8 @@ namespace GraphQLinq.Scaffolding
         {
             var json = GenerateQueryArgsJson(queryInfo);
 
-            declaration = declaration.WithMembers(
-                    SingletonList<MemberDeclarationSyntax>(
+
+            declaration = declaration.AddMembers(
                     PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier("QueriesArgsJson"))
                     .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.OverrideKeyword)))
                     .WithAccessorList(
@@ -524,7 +527,34 @@ namespace GraphQLinq.Scaffolding
                                         .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))})))
                     .WithInitializer(EqualsValueClause(
                         LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(json))))
-                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))));
+                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
+            return declaration;
+        }
+
+        /// <summary>
+        /// [MM] XK - this method will write in the class a property set with a json string that containt the args type of all queries
+        /// this take into account the non-nullable types
+        /// </summary>
+        /// <param name="queryInfo"></param>
+        /// <param name="declaration"></param>
+        /// <returns></returns>
+        private ClassDeclarationSyntax AddQueryKeywordProp(GraphqlType queryInfo, ClassDeclarationSyntax declaration)
+        {
+
+            declaration = declaration.AddMembers(
+                    PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier("QueryKeyword"))
+                    .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.OverrideKeyword)))
+                    .WithAccessorList(
+                        AccessorList(
+                            List<AccessorDeclarationSyntax>(
+                                new AccessorDeclarationSyntax[]{
+                                    AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                        .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))})))
+                    .WithInitializer(EqualsValueClause(
+                        LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(queryInfo.Name.ToLower()))))
+                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+
             return declaration;
         }
 

@@ -9,8 +9,8 @@ namespace GraphQLinq
 {
     class GraphQueryBuilder<T>
     {
-        private const string QueryTemplate = @"query {0} {{ {1}: {2} {3} {{ {4} }} }}";
-        private const string ScalarQueryTemplate = @"query {0} {{ {1}: {2} {3} {4} }}";
+        private const string QueryTemplate = @"{0} {1} {{ {2}: {3} {4} {{ {5} }} }}";
+        private const string ScalarQueryTemplate = @"{0} {1} {{ {2}: {3} {4} {5} }}";
 
         internal const string ResultAlias = "result";
 
@@ -74,7 +74,9 @@ namespace GraphQLinq
             var args = queryVariables.Select(pair => "$" + pair.Key + ": " + graphQuery.Context.GetArgsDefinition(graphQuery.QueryName, pair.Key));
             var queryParameterTypes = queryVariables.Any() ? $"({string.Join(", ", args)})" : "";
 
-            var graphQLQuery = string.Format(isScalarQuery ? ScalarQueryTemplate : QueryTemplate, queryParameterTypes, ResultAlias, graphQuery.QueryName, queryParameters, selectClause);
+            string queryFormat = isScalarQuery ? ScalarQueryTemplate : QueryTemplate;
+            var graphQLQuery = string.Format(queryFormat, graphQuery.Context.QueryKeyword, queryParameterTypes, ResultAlias, 
+                                                          graphQuery.QueryName, queryParameters, selectClause);
 
             var dictionary = new Dictionary<string, object> { { "query", graphQLQuery }, { "variables", queryVariables } };
 
