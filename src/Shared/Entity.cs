@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
@@ -22,15 +21,6 @@ namespace GraphQLinq
         public delegate void OnUpdatedHandler(Entity entity);
         public event OnUpdatedHandler OnUpdated;
 
-        internal static Dictionary<ID, Entity> s_ExistingEntities { get; set; } = new Dictionary<ID, Entity>();
-        public static Entity GetCachedEntity(ID id)
-        {
-            s_ExistingEntities.TryGetValue(id, out Entity entity);
-            return entity;
-        }
-
-        public static IEnumerable<Entity> ExistingEntities => s_ExistingEntities.Values;
-
         /// <summary>
         /// 
         /// </summary>
@@ -44,24 +34,31 @@ namespace GraphQLinq
 
         public Entity()
         {
+            UpdatedDate = DateTime.Now;
         }
 
         public Entity(ID id)
+            :this()
         {
             Id = id;
-            s_ExistingEntities.Add(Id, this);
+            EntityManager.Add(this);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
-            s_ExistingEntities.Remove(Id);
+            EntityManager.Remove(this);
+            OnUpdated = null;
         }
 
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
-            UpdatedDate = DateTime.Now;
+            FireOnUpdated();
+        }
 
+        protected void FireOnUpdated()
+        {
+            UpdatedDate = DateTime.Now;
             OnUpdated?.Invoke(this);
         }
     }
@@ -98,7 +95,8 @@ namespace GraphQLinq
             using (reader = jObject.CreateReader())
             {
                 Entity entity = existingValue as Entity;
-                if (entity != null || Entity.s_ExistingEntities.TryGetValue(id, out entity))
+                //if (entity != null ||  Entity.s_ExistingEntities.TryGetValue(id, out entity))
+                if (entity != null || EntityManager.s_ExistingEntities.TryGetValue(id, out entity))
                 {
                     // Populate existing data
                     serializer.Populate(reader, entity);
@@ -108,7 +106,8 @@ namespace GraphQLinq
                     // Create new instance and add it to ExistingEntities
                     entity = (Entity)Activator.CreateInstance(objectType);
                     serializer.Populate(reader, entity);
-                    Entity.s_ExistingEntities.Add(entity.Id, entity);
+                    //Entity.s_ExistingEntities.Add(entity.Id, entity);
+                    EntityManager.Add(entity);
                 }
 
                 return entity;
