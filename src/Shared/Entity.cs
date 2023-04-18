@@ -105,7 +105,6 @@ namespace GraphQLinq
             using (reader = jObject.CreateReader())
             {
                 Entity entity = existingValue as Entity;
-                //if (entity != null ||  Entity.s_ExistingEntities.TryGetValue(id, out entity))
                 if (entity != null || EntityManager.s_ExistingEntities.TryGetValue(id, out entity))
                 {
                     // Populate existing data
@@ -116,7 +115,6 @@ namespace GraphQLinq
                     // Create new instance and add it to ExistingEntities
                     entity = (Entity)Activator.CreateInstance(objectType);
                     serializer.Populate(reader, entity);
-                    //Entity.s_ExistingEntities.Add(entity.Id, entity);
                     entity.RegisterToManager();
                 }
 
