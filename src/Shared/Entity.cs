@@ -42,13 +42,22 @@ namespace GraphQLinq
             :this()
         {
             Id = id;
-            EntityManager.Add(this);
         }
 
         public virtual void Dispose()
         {
-            EntityManager.Remove(this);
+            RemoveFromManager();
             OnUpdated = null;
+        }
+
+        public virtual void RegisterToManager()
+        {
+            EntityManager.Add(this);
+        }
+
+        public virtual void RemoveFromManager()
+        {
+            EntityManager.Remove(this);
         }
 
         protected virtual void FireOnUpdated()
@@ -106,6 +115,7 @@ namespace GraphQLinq
                 {
                     // Create new instance and add it to ExistingEntities
                     entity = (Entity)Activator.CreateInstance(objectType);
+                    entity.RegisterToManager();
                     serializer.Populate(reader, entity);
                     //Entity.s_ExistingEntities.Add(entity.Id, entity);
                     EntityManager.Add(entity);
