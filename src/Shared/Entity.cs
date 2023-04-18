@@ -50,16 +50,16 @@ namespace GraphQLinq
             OnUpdated = null;
         }
 
+        protected virtual void FireOnUpdated()
+        {
+            UpdatedDate = DateTime.Now;
+            OnUpdated?.Invoke(this);
+        }
+
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
             FireOnUpdated();
-        }
-
-        protected void FireOnUpdated()
-        {
-            UpdatedDate = DateTime.Now;
-            OnUpdated?.Invoke(this);
         }
     }
 
