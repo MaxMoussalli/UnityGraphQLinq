@@ -30,6 +30,7 @@ namespace GraphQLinq
         /// The date this Entity has been updated
         /// </summary>
         [GraphQLinqIgnore]
+        [JsonIgnore]
         public DateTime? UpdatedDate { get; private set; }
 
         public Entity()
