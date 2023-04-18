@@ -11,7 +11,7 @@ namespace GraphQLinq
         public event EntityEventHandler OnEntityRemoved;
         public event EntityEventHandler OnEntityUpdated;
 
-        protected IReadOnlyDictionary<ID, T> ExistingEntities => m_ExistingEntities;
+        public IReadOnlyDictionary<ID, T> ExistingEntities => m_ExistingEntities;
         public bool TryGetValue(ID id, out T entity)
         {
             return m_ExistingEntities.TryGetValue(id, out entity);
