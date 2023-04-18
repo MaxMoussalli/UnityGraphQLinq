@@ -115,10 +115,9 @@ namespace GraphQLinq
                 {
                     // Create new instance and add it to ExistingEntities
                     entity = (Entity)Activator.CreateInstance(objectType);
-                    entity.RegisterToManager();
                     serializer.Populate(reader, entity);
                     //Entity.s_ExistingEntities.Add(entity.Id, entity);
-                    EntityManager.Add(entity);
+                    entity.RegisterToManager();
                 }
 
                 return entity;
