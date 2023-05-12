@@ -34,7 +34,8 @@ namespace GraphQLinq.Scaffolding
             { "Long", new("long", typeof(long)) },
             { "uuid", new("Guid", typeof(Guid)) },
             { "timestamptz", new("DateTimeOffset", typeof(DateTimeOffset)) },
-            { "Uri", new("Uri", typeof(Uri)) }
+            { "Uri", new("Uri", typeof(Uri)) },
+            { "JSONObject", new("JSONObject", typeof(JSONObject)) },
         };
 
         private static readonly List<string> BuiltInTypes = new()
