@@ -1,47 +1,97 @@
 ﻿using System;
 using System.Collections.Generic;
+using IdToEntity = System.Collections.Generic.Dictionary<GraphQLinq.ID, GraphQLinq.Entity>;
 
 namespace GraphQLinq
 {
     public abstract partial class EntityManager
     {
-        internal static Dictionary<ID, Entity> s_ExistingEntities { get; set; } = new Dictionary<ID, Entity>();
+        protected static Dictionary<Type, IdToEntity> s_ExistingEntities { get; set; } = new Dictionary<Type, IdToEntity>();
         protected static Dictionary<Type, EntityManager> s_Managers = new Dictionary<Type, EntityManager>();
 
-        public static Entity Get(ID id)
+        public static bool TryGetValue<T>(ID id, out T entity) where T : Entity
         {
-            s_ExistingEntities.TryGetValue(id, out Entity entity);
-            return entity;
+            var found = TryGetValue(id, typeof(T), out var e);
+            entity = e as T;
+            return found;
         }
 
-        public static bool TryGetValue(ID id, out Entity entity)
+        public static bool TryGetValue(ID id, Type type, out Entity entity)
         {
-            return s_ExistingEntities.TryGetValue(id, out entity);
+            entity = null;
+
+            // find IdToEntity from type
+            if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
+                return false;
+
+            // find entity from id
+            return idToEntity.TryGetValue(id, out entity);
         }
 
         public static void Add(Entity entity)
         {
-            s_ExistingEntities.Add(entity.Id, entity);
+            Type type = entity.GetType();
 
-            if (s_Managers.TryGetValue(entity.GetType(), out var res))
+            if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
+            {
+                idToEntity = new IdToEntity();
+                s_ExistingEntities.Add(type, idToEntity);
+            }
+
+            idToEntity.Add(entity.Id, entity);
+
+            // notify managers
+            if (s_Managers.TryGetValue(type, out var res))
                 res?.OnEntityAddedInternal(entity);
         }
 
-        public static void Remove(Entity entity)
+        public static bool Remove(Entity entity)
         {
-            s_ExistingEntities.Remove(entity.Id);
+            Type type = entity.GetType();
 
-            if (s_Managers.TryGetValue(entity.GetType(), out var res))
+            // find IdToEntity from type
+            if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
+                return false;
+
+            // remove entity from idToEntity
+            if (!idToEntity.Remove(entity.Id))
+                return false;
+
+            // notify managers
+            if (s_Managers.TryGetValue(type, out var res))
                 res?.OnEntityRemovedInternal(entity);
+
+            return true;
         }
 
         public static void RegisterManager<T>(EntityManager<T> manager) where T : Entity
         {
-            s_Managers.Add(typeof(T), manager);
+            Type type = typeof(T);
+            s_Managers.Add(type, manager);
+
+            // Register in manager the existing entities that correspond to the type
+            if (s_ExistingEntities.TryGetValue(type, out var idToEntity))
+            {
+                foreach (var entity in idToEntity.Values)
+                {
+                    manager.OnEntityAddedInternal(entity);
+                }
+            }
         }
 
         public static void UnregisterManager<T>(EntityManager<T> manager) where T : Entity
         {
+            Type type = typeof(T);
+
+            // Unregister from manager the existing entities that correspond to the type
+            if (s_ExistingEntities.TryGetValue(type, out var idToEntity))
+            {
+                foreach (var entity in idToEntity.Values)
+                {
+                    manager.OnEntityRemovedInternal(entity);
+                }
+            }
+
             s_Managers.Remove(typeof(T));
         }
 

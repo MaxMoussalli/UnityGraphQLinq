@@ -101,11 +101,11 @@ namespace GraphQLinq
             if (id == null)
                 return null;
 
-            // Recreate the reader
+            // Recreate the reader (to avoid recursive call to this JsonConverter)
             using (reader = jObject.CreateReader())
             {
                 Entity entity = existingValue as Entity;
-                if (entity != null || EntityManager.s_ExistingEntities.TryGetValue(id, out entity))
+                if (entity != null || EntityManager.TryGetValue(id, objectType, out entity))
                 {
                     // Populate existing data
                     serializer.Populate(reader, entity);
