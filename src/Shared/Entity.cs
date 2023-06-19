@@ -60,7 +60,10 @@ namespace GraphQLinq
             EntityManager.Remove(this);
         }
 
-        protected virtual void FireOnUpdated()
+        /// <summary>
+        /// Fire OnUpdated event and change UpdatedDate with current datetime
+        /// </summary>
+        public virtual void FireOnUpdated()
         {
             UpdatedDate = DateTime.Now;
             OnUpdated?.Invoke(this);
