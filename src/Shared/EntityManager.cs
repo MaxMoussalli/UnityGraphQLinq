@@ -28,38 +28,67 @@ namespace GraphQLinq
             return idToEntity.TryGetValue(id, out entity);
         }
 
-        public static void Add(Entity entity)
+        /// <summary>
+        /// Retrieve all base types from given type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static List<Type> GetBaseTypes(Type type)
         {
-            Type type = entity.GetType();
+            var result = new List<Type>();
 
-            if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
+            Type entityType = typeof(Entity);
+            if (!type.IsSubclassOf(entityType))
+                return result;
+
+            var t = type;
+            while (t != null && t != entityType)
             {
-                idToEntity = new IdToEntity();
-                s_ExistingEntities.Add(type, idToEntity);
+                result.Add(t);
+                t = t.BaseType;
             }
 
-            idToEntity.Add(entity.Id, entity);
+            return result;
+        }
 
-            // notify managers
-            if (s_Managers.TryGetValue(type, out var res))
-                res?.OnEntityAddedInternal(entity);
+        public static void Add(Entity entity)
+        {
+            var types = GetBaseTypes(entity.GetType());
+
+            foreach (var type in types)
+            {
+                if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
+                {
+                    idToEntity = new IdToEntity();
+                    s_ExistingEntities.Add(type, idToEntity);
+                }
+
+                idToEntity.Add(entity.Id, entity);
+
+                // notify managers
+                if (s_Managers.TryGetValue(type, out var res))
+                    res?.OnEntityAddedInternal(entity);
+            }
         }
 
         public static bool Remove(Entity entity)
         {
-            Type type = entity.GetType();
+            var types = GetBaseTypes(entity.GetType());
 
-            // find IdToEntity from type
-            if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
-                return false;
+            foreach (var type in types)
+            {
+                // find IdToEntity from type
+                if (!s_ExistingEntities.TryGetValue(type, out var idToEntity))
+                    return false;
 
-            // remove entity from idToEntity
-            if (!idToEntity.Remove(entity.Id))
-                return false;
+                // remove entity from idToEntity
+                if (!idToEntity.Remove(entity.Id))
+                    return false;
 
-            // notify managers
-            if (s_Managers.TryGetValue(type, out var res))
-                res?.OnEntityRemovedInternal(entity);
+                // notify managers
+                if (s_Managers.TryGetValue(type, out var res))
+                    res?.OnEntityRemovedInternal(entity);
+            }
 
             return true;
         }
