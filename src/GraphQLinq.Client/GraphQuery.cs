@@ -19,6 +19,7 @@ namespace GraphQLinq
         internal Dictionary<string, object> Arguments { get; set; } = new Dictionary<string, object>();
         internal GraphContext Context => context;
         internal bool UseMapper { get; set; }
+        internal bool IncludeAllSetting { get; set; }
 
         internal GraphQuery(GraphContext graphContext, string queryName)
         {
@@ -196,6 +197,14 @@ namespace GraphQLinq
             return (GraphItemQuery<T>)BuildInclude(path);
         }
 
+        public GraphItemQuery<T> IncludeAll()
+        {
+            var graphQuery = Clone<T>();
+            graphQuery.IncludeAllSetting = true;
+
+            return (GraphItemQuery<T>)graphQuery;
+        }
+
         /// <summary>
         /// To get a subset of the data, this will break the data cache ability if it inherit from Entity
         /// </summary>
@@ -230,6 +239,14 @@ namespace GraphQLinq
         public GraphCollectionQuery<T> Include<TProperty>(Expression<Func<T, TProperty>> path)
         {
             return (GraphCollectionQuery<T>)BuildInclude(path);
+        }
+
+        public GraphCollectionQuery<T> IncludeAll()
+        {
+            var graphQuery = Clone<T>();
+            graphQuery.IncludeAllSetting = true;
+
+            return (GraphCollectionQuery<T>)graphQuery;
         }
 
         /// <summary>

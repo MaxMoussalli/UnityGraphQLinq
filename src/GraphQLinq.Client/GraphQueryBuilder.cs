@@ -60,7 +60,7 @@ namespace GraphQLinq
             }
 
             // Handle include clauses
-            var select = BuildSelectClauseForType(typeof(T), includes, !hasSelector);
+            var select = BuildSelectClauseForType(typeof(T), includes, !hasSelector, includeAll: graphQuery.IncludeAllSetting);
             selectClause += select.SelectClause;
             foreach (var item in select.IncludeArguments)
             {
@@ -119,12 +119,17 @@ namespace GraphQLinq
             return selectClause;
         }
 
-        private static string BuildSelectClauseForType(Type targetType, int depth = 1)
+        private static string BuildSelectClauseForType(Type targetType, int depth = 1, bool includeAll = false)
         {
             if (targetType == typeof(string))
                 return "";
 
             var propertyInfos = targetType.GetProperties();
+
+            if (includeAll)
+            {
+                // TODO
+            }
 
             var propertiesToInclude = propertyInfos
                 .Where(info => !info.PropertyType.HasNestedProperties())
@@ -132,14 +137,14 @@ namespace GraphQLinq
 
             var padding = new string(' ', depth * 2);
             var selectClause = string.Join(Environment.NewLine, propertiesToInclude
-                .Select(info => $"{padding}{info.Name.ToCamelCase()}"));
+                .Select(info => $"{padding}{info.Name.ToCamelCase()}{{resultRecursive}}"));
 
             return selectClause;
         }
 
-        private static SelectClauseDetails BuildSelectClauseForType(Type targetType, List<IncludeDetails> includes, bool includeDefaultSelect = true)
+        private static SelectClauseDetails BuildSelectClauseForType(Type targetType, List<IncludeDetails> includes, bool includeDefaultSelect = true, bool includeAll = false)
         {
-            var selectClause = includeDefaultSelect ? BuildSelectClauseForType(targetType) : "";
+            var selectClause = includeDefaultSelect ? BuildSelectClauseForType(targetType, includeAll: includeAll) : "";
             var includeVariables = new Dictionary<string, object>();
 
             for (var index = 0; index < includes.Count; index++)
