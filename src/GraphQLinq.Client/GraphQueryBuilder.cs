@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -125,19 +126,57 @@ namespace GraphQLinq
                 return "";
 
             var propertyInfos = targetType.GetProperties();
-
-            if (includeAll)
-            {
-                // TODO
-            }
-
-            var propertiesToInclude = propertyInfos
-                .Where(info => !info.PropertyType.HasNestedProperties())
-                .Where(info => info.GetCustomAttribute<GraphQLinqIgnoreAttribute>() == null); // ignore properties with GraphQLIgnore attribute
+                                        
+            var flattenProperties = propertyInfos
+                .Where(info => info.GetCustomAttribute<GraphQLinqIgnoreAttribute>() == null) // ignore properties with GraphQLIgnore attribute;
+                .Where(info => !info.PropertyType.HasNestedProperties());      //remove nested properties
 
             var padding = new string(' ', depth * 2);
-            var selectClause = string.Join(Environment.NewLine, propertiesToInclude
-                .Select(info => $"{padding}{info.Name.ToCamelCase()}{{resultRecursive}}"));
+
+            string sumNestedSelectClause = "";
+            if (includeAll)
+            {
+                var nestedProperties = propertyInfos.Where(info => info.PropertyType.HasNestedProperties());
+                List<string> propertySerialized = new List<string>(nestedProperties.Count());
+
+                //recursivity on nested properties
+                foreach (var propertyInfo in nestedProperties)
+                {
+                    Type propertyType = propertyInfo.PropertyType;
+
+                    //if type is Collection.generic, consider generic argument type instead of collection type
+                    if (propertyType.IsGenericType)
+                    {
+                        propertyType = propertyType.GetGenericArguments()[0];
+                    }
+
+                    //if type is array, consider element type instead of array type
+                    if (propertyType.IsArray)
+                    {
+                        propertyType = propertyType.GetElementType();
+                    }
+
+
+                    if (!propertyType.HasNestedProperties()) // if type hasn't nest properties, add it in flattenProperties
+                    {
+                        flattenProperties = flattenProperties.Concat(new[] { propertyInfo });
+                        continue;
+                    }
+
+                    var nestedSelectClause = BuildSelectClauseForType(propertyType, includeAll:true);
+                    string formatedProperty = $"{padding}{propertyInfo.Name.ToCamelCase()} {{{Environment.NewLine} {nestedSelectClause}{Environment.NewLine}{padding}}}";
+                    propertySerialized.Add(formatedProperty);
+                }
+
+                //Concatenation of each nested properties of the same level
+                sumNestedSelectClause = string.Join(Environment.NewLine, propertySerialized);
+            }
+
+            var selectClause = string.Join(Environment.NewLine, 
+                    flattenProperties.Select(info => $"{padding}{info.Name.ToCamelCase()}"));
+
+            if(sumNestedSelectClause != "")
+                selectClause = selectClause + Environment.NewLine + padding + sumNestedSelectClause;
 
             return selectClause;
         }
