@@ -20,6 +20,7 @@ namespace GraphQLinq
         internal GraphContext Context => context;
         internal bool UseMapper { get; set; }
         internal bool IncludeAllSetting { get; set; }
+        internal bool UpperCaseIgnore { get; set; }
 
         internal GraphQuery(GraphContext graphContext, string queryName)
         {
@@ -197,10 +198,11 @@ namespace GraphQLinq
             return (GraphItemQuery<T>)BuildInclude(path);
         }
 
-        public GraphItemQuery<T> IncludeAll()
+        public GraphItemQuery<T> IncludeAll(bool ignoreUppercaseProperty = true)
         {
             var graphQuery = Clone<T>();
             graphQuery.IncludeAllSetting = true;
+            graphQuery.UpperCaseIgnore = ignoreUppercaseProperty;
 
             return (GraphItemQuery<T>)graphQuery;
         }
@@ -241,10 +243,11 @@ namespace GraphQLinq
             return (GraphCollectionQuery<T>)BuildInclude(path);
         }
 
-        public GraphCollectionQuery<T> IncludeAll()
+        public GraphCollectionQuery<T> IncludeAll(bool ignoreUppercaseProperty = true)
         {
             var graphQuery = Clone<T>();
             graphQuery.IncludeAllSetting = true;
+            graphQuery.UpperCaseIgnore = ignoreUppercaseProperty;
 
             return (GraphCollectionQuery<T>)graphQuery;
         }

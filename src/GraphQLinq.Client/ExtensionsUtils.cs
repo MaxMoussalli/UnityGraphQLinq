@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace GraphQLinq
 {
@@ -52,6 +53,22 @@ namespace GraphQLinq
                 return input;
             }
             return input.Substring(0, 1).ToLower() + input.Substring(1);
+        }
+
+        //doesn't apply camelCase if name is only uppercase
+        internal static string ToCamelCase(this string input, bool ignoreUpperCase)
+        {
+            return ignoreUpperCase && input.IsUpperCase() ? input : input.ToCamelCase();
+        }
+
+        internal static bool IsUpperCase(this string input)
+        {
+            foreach(char c in input)
+            {
+                if(Char.IsLower(c))
+                    return false;
+            }
+            return true;
         }
 
         internal static string ToGraphQlType(this Type type)
