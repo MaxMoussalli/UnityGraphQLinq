@@ -125,10 +125,10 @@ namespace GraphQLinq
             if (targetType == typeof(string))
                 return "";
 
-            var propertyInfos = targetType.GetProperties();
+            var propertyInfos = targetType.GetProperties()
+                .Where(info => info.GetCustomAttribute<GraphQLinqIgnoreAttribute>() == null); // ignore properties with GraphQLIgnore attribute;
                                         
             var flattenProperties = propertyInfos
-                .Where(info => info.GetCustomAttribute<GraphQLinqIgnoreAttribute>() == null) // ignore properties with GraphQLIgnore attribute;
                 .Where(info => !info.PropertyType.HasNestedProperties());      //remove nested properties
 
             var padding = new string(' ', depth * 2);
