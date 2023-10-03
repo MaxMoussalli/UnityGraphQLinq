@@ -61,7 +61,7 @@ namespace GraphQLinq
             }
 
             // Handle include clauses
-            var select = BuildSelectClauseForType(typeof(T), includes, !hasSelector, includeAll: graphQuery.IncludeAllSetting);
+            var select = BuildSelectClauseForType(typeof(T), includes, !hasSelector, includeAll: graphQuery.IncludeAllSetting, UpperCaseIgnore: graphQuery.UpperCaseIgnore);
             selectClause += select.SelectClause;
             foreach (var item in select.IncludeArguments)
             {
@@ -120,7 +120,7 @@ namespace GraphQLinq
             return selectClause;
         }
 
-        private static string BuildSelectClauseForType(Type targetType, int depth = 1, bool includeAll = false)
+        private static string BuildSelectClauseForType(Type targetType, int depth = 1, bool includeAll = false, bool UpperCaseIgnore = false)
         {
             if (targetType == typeof(string))
                 return "";
@@ -145,17 +145,12 @@ namespace GraphQLinq
                     Type propertyType = propertyInfo.PropertyType;
 
                     //if type is Collection.generic, consider generic argument type instead of collection type
-                    if (propertyType.IsGenericType)
-                    {
+                    if (propertyType.IsList())
                         propertyType = propertyType.GetGenericArguments()[0];
-                    }
 
                     //if type is array, consider element type instead of array type
                     if (propertyType.IsArray)
-                    {
                         propertyType = propertyType.GetElementType();
-                    }
-
 
                     if (!propertyType.HasNestedProperties()) // if type hasn't nest properties, add it in flattenProperties
                     {
@@ -163,8 +158,8 @@ namespace GraphQLinq
                         continue;
                     }
 
-                    var nestedSelectClause = BuildSelectClauseForType(propertyType, includeAll:true);
-                    string formatedProperty = $"{padding}{propertyInfo.Name.ToCamelCase()} {{{Environment.NewLine} {nestedSelectClause}{Environment.NewLine}{padding}}}";
+                    var nestedSelectClause = BuildSelectClauseForType(propertyType, includeAll: true, UpperCaseIgnore: UpperCaseIgnore);
+                    string formatedProperty = $"{padding}{propertyInfo.Name.ToCamelCase(UpperCaseIgnore)} {{{Environment.NewLine} {nestedSelectClause}{Environment.NewLine}{padding}}}";
                     propertySerialized.Add(formatedProperty);
                 }
 
@@ -173,7 +168,7 @@ namespace GraphQLinq
             }
 
             var selectClause = string.Join(Environment.NewLine, 
-                    flattenProperties.Select(info => $"{padding}{info.Name.ToCamelCase()}"));
+                    flattenProperties.Select(info => $"{padding}{info.Name.ToCamelCase(UpperCaseIgnore)}"));
 
             if(sumNestedSelectClause != "")
                 selectClause = selectClause + Environment.NewLine + padding + sumNestedSelectClause;
@@ -181,9 +176,9 @@ namespace GraphQLinq
             return selectClause;
         }
 
-        private static SelectClauseDetails BuildSelectClauseForType(Type targetType, List<IncludeDetails> includes, bool includeDefaultSelect = true, bool includeAll = false)
+        private static SelectClauseDetails BuildSelectClauseForType(Type targetType, List<IncludeDetails> includes, bool includeDefaultSelect = true, bool includeAll = false, bool UpperCaseIgnore = false)
         {
-            var selectClause = includeDefaultSelect ? BuildSelectClauseForType(targetType, includeAll: includeAll) : "";
+            var selectClause = includeDefaultSelect ? BuildSelectClauseForType(targetType, includeAll: includeAll, UpperCaseIgnore: UpperCaseIgnore) : "";
             var includeVariables = new Dictionary<string, object>();
 
             for (var index = 0; index < includes.Count; index++)
