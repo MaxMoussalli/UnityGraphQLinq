@@ -93,25 +93,26 @@ namespace GraphQLinq
             if (reader.TokenType == JsonToken.Null)
                 return null;
 
+            string id = null;
+
             // Read Id value
             JObject jObject = JObject.Load(reader);
+            if (jObject.TryGetValue("id", StringComparison.OrdinalIgnoreCase, out var token))
+            {
+                if (token.Type != JTokenType.String)
+                    throw new SerializationException("Entity Id is not a string");
 
-            if (!jObject.TryGetValue("id", StringComparison.OrdinalIgnoreCase, out var token))
-                throw new SerializationException("Entity Id not found");
+                id = token.Value<string>();
 
-            if (token.Type != JTokenType.String)
-                throw new SerializationException("Entity Id is not a string");
-
-            var id = token.Value<string>();
-
-            if (id == null)
-                return null;
+                if (id == null)
+                    return null;
+            }
 
             // Recreate the reader (to avoid recursive call to this JsonConverter)
             using (reader = jObject.CreateReader())
             {
                 Entity entity = existingValue as Entity;
-                if (entity != null || EntityManager.TryGetValue(id, objectType, out entity))
+                if (entity != null || (id != null && EntityManager.TryGetValue(id, objectType, out entity)))
                 {
                     // Populate existing data
                     serializer.Populate(reader, entity);
