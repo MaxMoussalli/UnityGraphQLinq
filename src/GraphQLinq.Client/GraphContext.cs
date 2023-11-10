@@ -87,15 +87,21 @@ namespace GraphQLinq
         }
 
 
-        private UnityWebRequest CreateWebRequest()
+        private UnityWebRequest CreateWebRequest(string query)
         {
-            var webRequest = UnityWebRequest.Post(m_BaseURL, UnityWebRequest.kHttpVerbPOST);
+            var webRequest = UnityWebRequest.Post(m_BaseURL, string.Empty);
             webRequest.SetRequestHeader("Content-Type", "application/json");
 
             foreach (var header in Headers)
             {
                 webRequest.SetRequestHeader(header.Key, header.Value);
             }
+
+            byte[] postData = Encoding.ASCII.GetBytes(query);
+            webRequest.uploadHandler = new UploadHandlerRaw(postData);
+            webRequest.disposeUploadHandlerOnDispose = true;
+            webRequest.disposeCertificateHandlerOnDispose = true;
+            webRequest.disposeDownloadHandlerOnDispose = true;
 
             return webRequest;
         }
@@ -104,11 +110,8 @@ namespace GraphQLinq
         {
             OnLog?.Invoke(GetType().ToString() + " - Send Query: " + query);
 
-            var webRequest = CreateWebRequest();
 
-            byte[] postData = Encoding.ASCII.GetBytes(query);
-            webRequest.uploadHandler = new UploadHandlerRaw(postData);
-
+            var webRequest = CreateWebRequest(query);
             webRequest.SendWebRequest();
             while (!webRequest.isDone)
                 await Task.Yield(); // to keep in sync with unity thread
