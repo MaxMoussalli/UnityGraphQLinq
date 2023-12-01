@@ -91,6 +91,7 @@ namespace GraphQLinq
         {
             var webRequest = UnityWebRequest.Post(m_BaseURL, string.Empty);
             webRequest.SetRequestHeader("Content-Type", "application/json");
+            webRequest.timeout = 20;
 
             foreach (var header in Headers)
             {
